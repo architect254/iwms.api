@@ -1,6 +1,6 @@
 db:
   host: 'localhost'
-  username: 'db_user'
+  username: 'iwms_client_user'
   password: 'password'
   synchronize: true
 jwt:
