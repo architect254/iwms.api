@@ -1,0 +1,7 @@
+db:
+  host: 'localhost'
+  username: 'iwms_client_user'
+  password: 'password'
+  synchronize: true
+jwt:
+  secret: 'topSecretSecret001'
