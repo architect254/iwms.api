@@ -4,15 +4,15 @@ import { Type } from 'class-transformer';
 export class UserDto {
   @IsNotEmpty()
   @IsString()
-  firstname: string;
+  first_name: string;
 
   @IsNotEmpty()
   @IsString()
-  lastname: string;
+  last_name: string;
 
   @IsNotEmpty()
   @IsString()
-  idNumber: string;
+  id_number: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -20,9 +20,9 @@ export class UserDto {
 
   @IsNotEmpty()
   @IsString()
-  phoneNumber: string;
+  phonenumber: string;
 
   @IsNotEmpty()
   @IsString()
-  groupId: string;
+  group_id: string;
 }

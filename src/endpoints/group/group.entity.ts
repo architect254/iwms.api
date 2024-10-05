@@ -11,8 +11,8 @@ export class Group extends AbstractEntity {
   email: string;
 
   @Column({ unique: true })
-  phoneNumber: string;
+  phone_number: string;
 
   @Column({ nullable: true })
-  logoImage?: string;
+  logo_image?: string;
 }

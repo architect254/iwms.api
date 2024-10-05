@@ -12,8 +12,8 @@ import { AbstractEntity } from '../../core/models/base-entity';
 import { Group } from '../group/group.entity';
 
 export enum UserRole {
-  SITE_ADMIN = `site admin`,
-  CLIENT = 'client',
+  SITE_ADMIN = `Site Admin`,
+  CLIENT = 'Client',
 }
 
 @Entity('users')
@@ -22,32 +22,32 @@ export class User extends AbstractEntity {
   id?: number;
 
   @Column()
-  firstname: string;
+  first_name: string;
 
   @Column()
-  lastname: string;
+  last_name: string;
 
   @Column({ unique: true })
-  idNumber: string;
+  id_number: string;
+
+  @Column({ unique: true })
+  phone_number: string;
 
   @Column({ unique: true })
   email: string;
-
-  @Column({ unique: true })
-  phoneNumber: string;
 
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
   role: UserRole;
 
   @Column({ nullable: true })
-  profileImage?: string;
+  profile_image?: string; 
 
   @ManyToOne(() => Group, { nullable: true })
   @JoinColumn()
   group: Group;
 
   @Column({ nullable: true })
-  groupId?: string;
+  group_id?: string;
 
   @Exclude()
   @Column()

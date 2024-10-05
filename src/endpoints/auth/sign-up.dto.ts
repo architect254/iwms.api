@@ -12,19 +12,19 @@ import { SignInCredentialsDto } from './sign-in.dto';
 export class SignUpCredentialsDto extends SignInCredentialsDto {
   @IsNotEmpty()
   @IsString()
-  firstname: string;
+  first_name: string;
 
   @IsNotEmpty()
   @IsString()
-  lastname: string;
+  last_name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  phone_number: string;
 
   @IsNotEmpty()
   @IsEmail()
   email: string;
-
-  @IsNotEmpty()
-  @IsString()
-  phoneNumber: string;
 
   @IsNotEmpty()
   @IsStrongPassword()

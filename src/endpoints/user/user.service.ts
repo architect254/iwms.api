@@ -22,13 +22,13 @@ export class UserService {
   ) {}
 
   async create(payload: UserDto, initiator: User): Promise<User> {
-    const { groupId } = payload;
+    const { group_id } = payload;
 
     const user = new User();
 
     Object.assign(user, payload);
 
-    const group = await this.groupService.read(groupId);
+    const group = await this.groupService.read(group_id);
 
     user.group = group;
 
@@ -69,13 +69,13 @@ export class UserService {
   }
 
   async update(id, payload: UserDto, initiator: User): Promise<User> {
-    const { groupId } = payload;
+    const { group_id } = payload;
 
     const user: User = await this.read(id);
 
     Object.assign(user, payload);
 
-    const group = await this.groupService.read(groupId);
+    const group = await this.groupService.read(group_id);
 
     user.group = group;
     user.updator = initiator;

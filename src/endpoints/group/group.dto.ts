@@ -11,5 +11,5 @@ export class GroupDto {
 
   @IsString()
   @IsNotEmpty()
-  phoneNumber: string;
+  phone_number: string;
 }

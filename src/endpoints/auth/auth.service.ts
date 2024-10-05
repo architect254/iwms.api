@@ -9,13 +9,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import { User, UserRole } from '../user/user.entity';
+import { User } from '../user/user.entity';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
 @Injectable()
-export class AuthService {
+export class AuthService { 
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
@@ -27,7 +27,6 @@ export class AuthService {
     const user = new User();
     Object.assign(user, credentials);
 
-    user.role = UserRole.CLIENT;
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);
 

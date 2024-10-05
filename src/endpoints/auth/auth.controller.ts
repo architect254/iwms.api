@@ -8,7 +8,7 @@ import { AuthService } from './auth.service';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
-@Controller()
+@Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -27,15 +27,15 @@ export class AuthController {
   async signIn(
     @Body()
     payload: SignInCredentialsDto,
-  ): Promise<{ accessToken: string }> {
+  ): Promise<{ token: string }> {
     const user = await this.authService.signIn(payload);
     if (!user) {
       throw new ConflictException('invalid user credentials');
     }
     delete user.password && delete user.salt;
     const jwtPayload: JwtPayload = { user };
-    const accessToken = await this.jwtService.sign(jwtPayload);
+    const token = await this.jwtService.sign(jwtPayload);
 
-    return { accessToken };
+    return { token };
   }
 }
