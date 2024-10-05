@@ -23,38 +23,50 @@ export class LoggingInterceptor implements NestInterceptor {
 
     const logBody = (body: any, url: string) => {
       if (!body || !Object.keys(body).length) {
-        return `NO_REQUEST_BODY `;
+        return `NO_REQUEST_BODY`;
       } else {
         delete body.password;
-        if (url === '/auth/sign-in') {
-          return `REQUEST_BODY -> ${JSON.stringify(body)}`;
-        } else if (url === '/auth/sign-up') {
-          return `REQUEST_BODY -> ${JSON.stringify(body)}`;
-        } else {
-          return `REQUEST_BODY -> ${JSON.stringify(body)}`;
-        }
+        return Object.entries(body)
+          .map((entry, index) => {
+            return `${entry[0]}: ${entry[1]}${index < Object.entries(body).length - 1 ? ', ' : ''}`;
+          })
+          .reduce((prev, curr) => {
+            return prev + curr;
+          });
       }
     };
 
     const logSignedUser = (user) => {
       if (!user || !Object.keys(user).length) {
-        return `NO_SIGNED_USER `;
+        return `NO_SIGNED_USER`;
       }
-      return `SIGNED_USER -> ${user.id}`;
+      return user.id;
     };
 
     const logQueryParams = (query) => {
       if (!query || !Object.keys(query).length) {
-        return `NO_QUERY_PARAMS `;
+        return `NO_QUERY_PARAMS`;
       }
-      return 'QUERY_PARAMS -> ' + JSON.stringify(query);
+      return Object.entries(query)
+        .map((entry, index) => {
+          return `${entry[0]}: ${entry[1]}${index < Object.entries(query).length - 1 ? ', ' : ''}`;
+        })
+        .reduce((prev, curr) => {
+          return prev + curr;
+        });
     };
 
     const logRouteParams = (params) => {
       if (!params || !Object.keys(params).length) {
-        return `NO_ROUTE_PARAMS `;
+        return `NO_ROUTE_PARAMS`;
       }
-      return 'ROUTE_PARAMS -> ' + JSON.stringify(params);
+      return Object.entries(params)
+        .map((entry, index) => {
+          return `${entry[0]}: ${entry[1]}${index < Object.entries(params).length - 1 ? ', ' : ''}`;
+        })
+        .reduce((prev, curr) => {
+          return prev + curr;
+        });
     };
 
     return next.handle().pipe(
@@ -62,9 +74,9 @@ export class LoggingInterceptor implements NestInterceptor {
         Logger.log(
           `${logSignedUser(
             request.user,
-          )} ::: ${method} -> ${url} :|{ ${logBody(body, url)} }|[ ${logRouteParams(
+          )} ${method} -> ${url} { ${logBody(body, url)} } ( ${logRouteParams(
             request.params,
-          )} ]|( ${logQueryParams(request.query)} )|: ${Date.now() - now}ms`,
+          )} | ${logQueryParams(request.query)} ) ${Date.now() - now}ms`,
           context.getClass().name,
         );
       }),

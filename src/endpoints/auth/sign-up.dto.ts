@@ -1,15 +1,22 @@
-import { SignInCredentialsDto } from './sign-in.dto';
-import { IsNotEmpty, IsString, IsEmail, IsDate } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEmail,
+  IsDate,
+  IsStrongPassword,
+} from 'class-validator';
 import { Type } from 'class-transformer';
+
+import { SignInCredentialsDto } from './sign-in.dto';
 
 export class SignUpCredentialsDto extends SignInCredentialsDto {
   @IsNotEmpty()
   @IsString()
-  name: string;
+  firstname: string;
 
   @IsNotEmpty()
   @IsString()
-  surname: string;
+  lastname: string;
 
   @IsNotEmpty()
   @IsEmail()
@@ -17,5 +24,9 @@ export class SignUpCredentialsDto extends SignInCredentialsDto {
 
   @IsNotEmpty()
   @IsString()
+  phoneNumber: string;
+
+  @IsNotEmpty()
+  @IsStrongPassword()
   password: string;
 }

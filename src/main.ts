@@ -14,9 +14,10 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const PORT = process.env.PORT || serverConfig.port;
 
+  app.setGlobalPrefix('api');
+
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalPipes(new ValidationPipe());
-  app.setGlobalPrefix(`api`);
 
   if (process.env.NODE_ENV === 'development') {
     app.enableCors();

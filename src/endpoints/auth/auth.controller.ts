@@ -1,14 +1,14 @@
-import { Controller, UnauthorizedException, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from './jwt.payload';
+import { FileInterceptor } from '@nestjs/platform-express';
 
-import { SignUpCredentialsDto } from './dtos/sign-up.dto';
-import { SignInCredentialsDto } from './dtos/sign-in.dto';
-
-import { AuthService } from './auth.service';
+import { JwtPayload } from '../../core/models/jwt.payload';
 import { User } from '../user/user.entity';
+import { AuthService } from './auth.service';
+import { SignInCredentialsDto } from './sign-in.dto';
+import { SignUpCredentialsDto } from './sign-up.dto';
 
-@Controller('auth')
+@Controller()
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -30,7 +30,7 @@ export class AuthController {
   ): Promise<{ accessToken: string }> {
     const user = await this.authService.signIn(payload);
     if (!user) {
-      throw new UnauthorizedException('Invalid User Credentials');
+      throw new ConflictException('invalid user credentials');
     }
     delete user.password && delete user.salt;
     const jwtPayload: JwtPayload = { user };

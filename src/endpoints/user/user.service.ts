@@ -7,27 +7,33 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-import { hash, genSalt } from 'bcrypt';
 
 import { User } from './user.entity';
 import { UserDto } from './user.dto';
+
+import { GroupService } from '../group/group.service';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private groupService: GroupService,
   ) {}
 
-  async create(credentials: UserDto, initiator: User): Promise<User> {
-    const { password } = credentials;
+  async create(payload: UserDto, initiator: User): Promise<User> {
+    const { groupId } = payload;
+
     const user = new User();
 
-    Object.assign(user, credentials);
+    Object.assign(user, payload);
+
+    const group = await this.groupService.read(groupId);
+
+    user.group = group;
 
     user.creator = initiator;
-    user.salt = await genSalt();
-    user.password = await hash(password, user.salt);
+    user.updator = initiator;
 
     return await this.save(user);
   }
@@ -48,16 +54,30 @@ export class UserService {
     return user;
   }
 
-  async readAll(page: number, pageSize: number): Promise<User[]> {
-    const skip: number = pageSize * (page - 1);
+  async readAll(page: number, take: number): Promise<User[]> {
+    const skip: number = Number(take * (page - 1));
 
-    return await this.userRepo.find({ skip, take: pageSize });
+    let users = [];
+
+    try {
+      users = await this.userRepo.find({ skip, take });
+    } catch (error) {
+      users = [];
+    }
+
+    return users;
   }
 
   async update(id, payload: UserDto, initiator: User): Promise<User> {
+    const { groupId } = payload;
+
     const user: User = await this.read(id);
 
     Object.assign(user, payload);
+
+    const group = await this.groupService.read(groupId);
+
+    user.group = group;
     user.updator = initiator;
 
     return await this.userRepo.save(user);

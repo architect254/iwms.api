@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt } from 'passport-jwt';
 import { Strategy } from 'passport-local';
@@ -6,12 +6,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
-import { User } from 'src/user/user.entity';
-import { JwtPayload } from './jwt.payload';
+import { JwtPayload } from '../../core/models/jwt.payload';
+
+import { User } from '../../endpoints/user/user.entity';
 
 import * as config from 'config';
 
-const JWT_CONFIG = config.get('jwt');
+const JWT_CONFIG = config.get('db');
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -30,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const DB_USER = await this.userRepo.findOne({ where: { email } });
 
     if (!DB_USER) {
-      throw new UnauthorizedException('Invalid User Credentials');
+      throw new NotFoundException('user not found');
     }
 
     return DB_USER;
