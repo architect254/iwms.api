@@ -59,11 +59,11 @@ export class User {
   @Column({ nullable: true })
   membership_id: string;
 
-  @OneToOne(() => Spouse, (spouse) => spouse.spouse)
+  @OneToOne(() => Spouse, (spouse) => spouse.spouse, { nullable: true })
   @JoinColumn()
   spouse: Spouse;
 
-  @Column()
+  @Column({ nullable: true })
   spouse_id: string;
 
   @OneToMany(() => Child, (child) => child.parent)
