@@ -7,7 +7,7 @@ import {
   Column,
 } from 'typeorm';
 
-import { User } from '../../endpoints/user/user.entity';
+import { User } from '../../endpoints/user/entities/user.entity';
 
 export abstract class AbstractEntity {
   @PrimaryGeneratedColumn()
@@ -32,5 +32,5 @@ export abstract class AbstractEntity {
 
   @Column({ nullable: true })
   updator_id: string;
+  constructor() {}
 }
-

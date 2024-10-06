@@ -10,7 +10,7 @@ import { Repository } from 'typeorm';
 
 import { Group } from './group.entity';
 import { GroupDto } from './group.dto';
-import { User } from 'src/endpoints/user/user.entity';
+import { User } from 'src/endpoints/user/entities/user.entity';
 
 @Injectable()
 export class GroupService {

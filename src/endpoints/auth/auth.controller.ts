@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FileInterceptor } from '@nestjs/platform-express';
 
 import { JwtPayload } from '../../core/models/jwt.payload';
-import { User } from '../user/user.entity';
+import { User } from '../user/entities/user.entity';
 import { AuthService } from './auth.service';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';

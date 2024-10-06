@@ -1,4 +1,4 @@
-import { User } from "src/endpoints/user/user.entity";
+import { User } from "src/endpoints/user/entities/user.entity";
 
 export interface JwtPayload {
   user: User;

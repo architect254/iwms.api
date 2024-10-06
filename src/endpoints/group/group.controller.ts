@@ -14,7 +14,7 @@ import { GroupService } from './group.service';
 import { GroupDto } from './group.dto';
 
 import { GetUser } from '../user/get-user.decorator';
-import { User } from '../user/user.entity';
+import { User } from '../user/entities/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('groups')

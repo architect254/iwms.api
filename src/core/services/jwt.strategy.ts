@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 
 import { JwtPayload } from '../../core/models/jwt.payload';
 
-import { User } from '../../endpoints/user/user.entity';
+import { User } from '../../endpoints/user/entities/user.entity';
 
 import * as config from 'config';
 

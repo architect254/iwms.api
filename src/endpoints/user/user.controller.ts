@@ -15,7 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from './get-user.decorator';
 import { UserService } from './user.service';
 import { UserDto } from './user.dto';
-import { User } from './user.entity';
+import { User } from './entities/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -31,7 +31,7 @@ export class UserController {
   async getUserById(@Param('id') id: number) {
     return await this.userService.read(id);
   }
-  
+
   @Get()
   async getUsers(
     @Query('page', ParseIntPipe) page: number = 1,

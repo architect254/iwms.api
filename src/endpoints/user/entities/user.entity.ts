@@ -3,13 +3,14 @@ import {
   Column,
   PrimaryGeneratedColumn,
   JoinColumn,
-  ManyToOne,
+  OneToMany,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 import { Exclude } from 'class-transformer';
 
-import { AbstractEntity } from '../../core/models/base-entity';
-import { Group } from '../group/group.entity';
+import { Child } from './child.entity';
 
 export enum UserRole {
   SITE_ADMIN = `Site Admin`,
@@ -17,9 +18,15 @@ export enum UserRole {
 }
 
 @Entity('users')
-export class User extends AbstractEntity {
+export class User {
   @PrimaryGeneratedColumn()
   id?: number;
+
+  @CreateDateColumn()
+  create_date?: Date;
+
+  @UpdateDateColumn()
+  update_date?: Date;
 
   @Column()
   first_name: string;
@@ -40,14 +47,11 @@ export class User extends AbstractEntity {
   role: UserRole;
 
   @Column({ nullable: true })
-  profile_image?: string; 
+  profile_image?: string;
 
-  @ManyToOne(() => Group, { nullable: true })
+  @OneToMany(() => Child, (child) => child.parent)
   @JoinColumn()
-  group: Group;
-
-  @Column({ nullable: true })
-  group_id?: string;
+  children: Child[];
 
   @Exclude()
   @Column()
@@ -56,4 +60,6 @@ export class User extends AbstractEntity {
   @Exclude()
   @Column()
   salt: string;
+
+  constructor() {}
 }

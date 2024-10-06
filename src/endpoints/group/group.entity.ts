@@ -1,9 +1,22 @@
-import { Entity, Column } from 'typeorm';
+import {
+  Entity,
+  Column,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  JoinColumn,
+} from 'typeorm';
+
+import { User } from '../user/entities/user.entity';
 
 import { AbstractEntity } from '../../core/models/base-entity';
+import { Membership } from '../membership/membership.entity';
 
 @Entity('groups')
 export class Group extends AbstractEntity {
+  @PrimaryGeneratedColumn()
+  id?: number;
+
   @Column()
   name: string;
 
@@ -15,4 +28,17 @@ export class Group extends AbstractEntity {
 
   @Column({ nullable: true })
   logo_image?: string;
+
+  @OneToOne(() => Membership, (membership) => membership.group, {
+    nullable: false,
+  })
+  @JoinColumn()
+  manager: Membership;
+
+  @Column({ nullable: false })
+  manager_id?: string;
+
+  constructor() {
+    super();
+  }
 }
