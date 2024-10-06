@@ -1,5 +1,5 @@
 db:
-  synchronize: false
+  synchronize: true
   host: 'dpg-crvbhbu8ii6s738p95rg-a'
   username: 'iwms_client_user'
   password: 'ML3oLl7hkN1MfnSaWVOfvmI6Y0ohHVG2'
