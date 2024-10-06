@@ -7,7 +7,7 @@ import {
   Column,
 } from 'typeorm';
 
-import { User } from '../user/user.entity';
+import { User } from '../../endpoints/user/entities/user.entity';
 
 export abstract class AbstractEntity {
   @PrimaryGeneratedColumn()
@@ -24,12 +24,13 @@ export abstract class AbstractEntity {
   creator: User;
 
   @Column({ nullable: true })
-  creatorId: string;
+  creator_id: string;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn()
   updator: User;
 
   @Column({ nullable: true })
-  updatorId: string;
+  updator_id: string;
+  constructor() {}
 }
