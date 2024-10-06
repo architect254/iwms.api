@@ -21,8 +21,9 @@ async function bootstrap() {
 
   // if (process.env.NODE_ENV === 'development') {
   app.enableCors({
-    origin: '*',
+    origin: 'https://iwms-5vlj.onrender.com/',
     credentials: true,
+    allowedHeaders: ['Content-Type'],
   });
   // }
 
