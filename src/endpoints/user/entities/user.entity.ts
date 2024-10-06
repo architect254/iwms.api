@@ -6,11 +6,14 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 import { Exclude } from 'class-transformer';
 
 import { Child } from './child.entity';
+import { Spouse } from './spouse.entity';
+import { Membership } from 'src/endpoints/membership/membership.entity';
 
 export enum UserRole {
   SITE_ADMIN = `Site Admin`,
@@ -48,6 +51,20 @@ export class User {
 
   @Column({ nullable: true })
   profile_image?: string;
+
+  @OneToOne(() => Membership, { nullable: true })
+  @JoinColumn()
+  membership: Membership;
+
+  @Column({ nullable: true })
+  membership_id: string;
+
+  @OneToOne(() => Spouse, (spouse) => spouse.spouse)
+  @JoinColumn()
+  spouse: Spouse;
+
+  @Column()
+  spouse_id: string;
 
   @OneToMany(() => Child, (child) => child.parent)
   @JoinColumn()

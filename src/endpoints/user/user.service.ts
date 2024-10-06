@@ -13,7 +13,8 @@ import { Spouse } from './entities/spouse.entity';
 import { User } from './entities/user.entity';
 
 import { UserDto } from './user.dto';
-
+import { MembershipService } from '../membership/membership.service';
+import { GroupService } from '../group/group.service';
 
 @Injectable()
 export class UserService {
@@ -24,35 +25,44 @@ export class UserService {
     private spouseRepo: Repository<Spouse>,
     @InjectRepository(Child)
     private childRepo: Repository<Child>,
+    private membershipService: MembershipService,
+    private groupService: GroupService,
   ) {}
 
   async create(payload: UserDto, initiator: User): Promise<User> {
-    const user = new User();
+    let user = new User();
+    let spouse = null;
+    let children = [];
 
     Object.assign(user, payload);
 
-    // const membership = await this.membershipService.create(
-    //   { status: 'Inactive' },
-    //   initiator,
-    // );
+    user = await this.save(user);
 
-    // if (payload.user.group_id) {
-    //   const group = await this.groupService.read(payload.user.group_id);
-    //   user.group = group;
-    // }
+    const membership = await this.membershipService.create(
+      { status: 'Inactive' },
+      initiator,
+    );
+
+    if (payload.user.group_id) {
+      const group = await this.groupService.read(payload.user.group_id);
+      membership.group = group;
+      user.membership = membership;
+    }
 
     if (Object.keys(payload.spouse).length) {
-      const spouse = await this.spouseRepo.create(payload.spouse);
+      spouse = await this.spouseRepo.create(payload.spouse);
+      user.spouse = spouse;
     }
 
     if (payload.children.length) {
       for (let index = 0; index < payload.children.length; index++) {
         const child = await this.childRepo.create(payload.children[index]);
-        user.children.push(child);
+        children.push(child);
       }
+      user.children = children;
     }
 
-    return await this.save(user);
+    return user;
   }
 
   async read(id): Promise<User> {

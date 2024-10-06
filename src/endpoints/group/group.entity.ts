@@ -29,15 +29,6 @@ export class Group extends AbstractEntity {
   @Column({ nullable: true })
   logo_image?: string;
 
-  @OneToOne(() => Membership, (membership) => membership.group, {
-    nullable: false,
-  })
-  @JoinColumn()
-  manager: Membership;
-
-  @Column({ nullable: false })
-  manager_id?: string;
-
   constructor() {
     super();
   }

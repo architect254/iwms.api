@@ -39,7 +39,6 @@ export class Spouse {
   email: string;
 
   @OneToOne(() => User, { nullable: true })
-  @JoinColumn()
   spouse: User;
 
   @Column({ nullable: true })

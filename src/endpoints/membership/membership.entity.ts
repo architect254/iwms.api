@@ -16,7 +16,7 @@ export class Membership extends AbstractEntity {
   })
   status: MembershipStatus;
 
-  @ManyToOne(() => Group, { nullable: false })
+  @ManyToOne(() => Group, { nullable: true })
   @JoinColumn()
   group: Group;
 
