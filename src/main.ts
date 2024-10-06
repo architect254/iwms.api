@@ -24,6 +24,7 @@ async function bootstrap() {
     origin: 'https://iwms-5vlj.onrender.com/',
     credentials: true,
     allowedHeaders: ['Content-Type'],
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT'],
   });
   // }
 
