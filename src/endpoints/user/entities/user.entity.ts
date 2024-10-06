@@ -40,6 +40,9 @@ export class User {
   @Column({ unique: true })
   id_number: string;
 
+  @Column()
+  birth_date: Date;
+
   @Column({ unique: true })
   phone_number: string;
 
