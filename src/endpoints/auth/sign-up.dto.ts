@@ -20,11 +20,23 @@ export class SignUpCredentialsDto extends SignInCredentialsDto {
 
   @IsNotEmpty()
   @IsString()
+  id_number: string;
+
+  @IsNotEmpty()
+  @IsString()
+  birth_date: string;
+
+  @IsNotEmpty()
+  @IsString()
   phone_number: string;
 
   @IsNotEmpty()
   @IsEmail()
   email: string;
+
+  @IsNotEmpty()
+  @IsString()
+  role: string;
 
   @IsNotEmpty()
   @IsStrongPassword()
