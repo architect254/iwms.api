@@ -19,9 +19,14 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalPipes(new ValidationPipe());
 
-  if (process.env.NODE_ENV === 'development') {
-    app.enableCors();
-  }
+  // if (process.env.NODE_ENV === 'development') {
+  app.enableCors({
+    origin: 'https://iwms-5vlj.onrender.com/',
+    credentials: true,
+    allowedHeaders: ['Content-Type'],
+    methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT'],
+  });
+  // }
 
   await app.listen(PORT);
 
