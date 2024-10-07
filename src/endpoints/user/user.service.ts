@@ -8,6 +8,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
+import { hash, genSalt } from 'bcrypt';
+
 import { Child } from './entities/child.entity';
 import { Spouse } from './entities/spouse.entity';
 import { User } from './entities/user.entity';
@@ -30,39 +32,58 @@ export class UserService {
   ) {}
 
   async create(payload: UserDto, initiator: User): Promise<User> {
+    const { userDto, spouseDto, childrenDto } = payload;
+    const { group_id } = userDto;
+    delete userDto.group_id;
+
     let user = new User();
     let spouse = null;
     let children = [];
+    let membership = null;
 
-    Object.assign(user, payload);
+    Object.assign(user, userDto);
+    console.log('user', user, userDto, spouseDto, childrenDto, group_id);
+
+    if (group_id) {
+      membership = await this.membershipService.create(
+        { status: 'Inactive' },
+        initiator,
+      );
+
+      const group = await this.groupService.read(group_id);
+
+      membership.group = group;
+    }
+
+    if (!(spouseDto === undefined || spouseDto === null)) {
+      spouse = await this.spouseRepo.create(spouseDto);
+    }
+
+    if (!(childrenDto === undefined || childrenDto === null)) {
+      for (let index = 0; index < childrenDto.length; index++) {
+        const child = await this.childRepo.create(childrenDto[index]);
+        children.push(child);
+      }
+    }
+
+    user.membership = membership;
+    user.spouse = spouse;
+    user.children = children;
+
+    user.salt = await genSalt();
+    user.password = await this.hashPassword('Password@123', user.salt);
 
     user = await this.save(user);
 
-    const membership = await this.membershipService.create(
-      { status: 'Inactive' },
-      initiator,
-    );
+    delete user.password && delete user.salt;
 
-    if (payload.user.group_id) {
-      const group = await this.groupService.read(payload.user.group_id);
-      membership.group = group;
-      user.membership = membership;
-    }
-
-    if (Object.keys(payload.spouse).length) {
-      spouse = await this.spouseRepo.create(payload.spouse);
-      user.spouse = spouse;
-    }
-
-    if (payload.children.length) {
-      for (let index = 0; index < payload.children.length; index++) {
-        const child = await this.childRepo.create(payload.children[index]);
-        children.push(child);
-      }
-      user.children = children;
-    }
+    console.log('user', user);
 
     return user;
+  }
+
+  async hashPassword(input: string, salt: string): Promise<string> {
+    return hash(input, salt);
   }
 
   async read(id: number): Promise<User> {

@@ -30,7 +30,6 @@ export class AuthController {
   ): Promise<{ token: string }> {
     const user = await this.authService.signIn(payload);
 
-    delete user.password && delete user.salt;
     const jwtPayload: JwtPayload = { user };
     const token = await this.jwtService.sign(jwtPayload);
 

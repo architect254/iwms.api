@@ -6,8 +6,9 @@ import {
   IsObject,
   ValidateNested,
   IsArray,
+  IsOptional,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CoreUserDto {
   @IsNotEmpty()
@@ -23,8 +24,9 @@ export class CoreUserDto {
   id_number: string;
 
   @IsNotEmpty()
-  @IsString()
-  birth_date: string;
+  @IsDate()
+  @Transform((birth_date) => new Date(birth_date.value))
+  birth_date: Date;
 
   @IsNotEmpty()
   @IsString()
@@ -38,7 +40,7 @@ export class CoreUserDto {
   @IsString()
   role: string;
 
-  @IsNotEmpty()
+  @IsOptional()
   @IsString()
   group_id: string;
 }
@@ -56,8 +58,9 @@ export class SpouseDto {
   id_number: string;
 
   @IsNotEmpty()
-  @IsString()
-  birth_date: string;
+  @IsDate()
+  @Transform((birth_date) => new Date(birth_date.value))
+  birth_date: Date;
 
   @IsNotEmpty()
   @IsString()
@@ -77,22 +80,25 @@ export class ChildDto {
   last_name: string;
 
   @IsNotEmpty()
-  @IsString()
-  birth_date: string;
+  @IsDate()
+  @Transform((birth_date) => new Date(birth_date.value))
+  birth_date: Date;
 }
 export class UserDto {
   @IsObject()
   @ValidateNested()
   @Type(() => CoreUserDto)
-  user: CoreUserDto;
+  userDto: CoreUserDto;
 
+  @IsOptional()
   @IsObject()
   @ValidateNested()
   @Type(() => SpouseDto)
-  spouse: SpouseDto;
+  spouseDto: SpouseDto;
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
-  children: ChildDto[];
+  childrenDto: ChildDto[];
 }

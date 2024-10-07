@@ -17,7 +17,10 @@ import { Membership } from 'src/endpoints/membership/membership.entity';
 
 export enum UserRole {
   SITE_ADMIN = `Site Admin`,
-  CLIENT = 'Client',
+  WELFARE_MANAGER = 'Welfare Manager',
+  WELFARE_ACCOUNTANT = 'Welfare Accountant',
+  WELFARE_SECRETARY = 'Welfare Secretary',
+  WELFARE_CLIENT_MEMBER = 'Client',
 }
 
 @Entity('users')
@@ -52,7 +55,7 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.CLIENT,
+    default: UserRole.WELFARE_CLIENT_MEMBER,
     nullable: false,
   })
   role: UserRole;
