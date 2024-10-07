@@ -4,7 +4,7 @@ import { AbstractEntity } from '../../core/models/base-entity';
 
 export enum MembershipStatus {
   ACTIVE = 'Active',
-  Inactive = 'Inactive',
+  INACTIVE = 'Inactive',
 }
 
 @Entity('memberships')
@@ -12,7 +12,7 @@ export class Membership extends AbstractEntity {
   @Column({
     type: 'enum',
     enum: MembershipStatus,
-    default: MembershipStatus.Inactive,
+    default: MembershipStatus.INACTIVE,
   })
   status: MembershipStatus;
 
