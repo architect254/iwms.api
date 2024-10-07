@@ -5,7 +5,7 @@ import {
   IsDate,
   IsStrongPassword,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 
@@ -24,6 +24,7 @@ export class SignUpCredentialsDto extends SignInCredentialsDto {
 
   @IsNotEmpty()
   @IsDate()
+  @Transform((date) => new Date(date.value))
   birth_date: Date;
 
   @IsNotEmpty()

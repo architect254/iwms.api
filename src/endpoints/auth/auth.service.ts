@@ -68,6 +68,9 @@ export class AuthService {
     if (!user || !isValid) {
       throw new ConflictException('invalid user credentials');
     }
+    
+    delete user.password && delete user.salt;
+
     return user;
   }
 
