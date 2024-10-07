@@ -42,6 +42,6 @@ export class Spouse {
   spouse: User;
 
   @Column({ nullable: false })
-  spouse_id?: string;
+  spouse_id?: number;
   constructor() {}
 }

@@ -21,7 +21,7 @@ export class Membership extends AbstractEntity {
   group: Group;
 
   @Column({ nullable: false })
-  group_id: string;
+  group_id: number;
   constructor() {
     super();
   }

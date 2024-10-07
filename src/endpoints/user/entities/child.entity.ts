@@ -27,6 +27,6 @@ export class Child {
   parent: User;
 
   @Column({ nullable: false })
-  parent_id?: string;
+  parent_id?: number;
   constructor() {}
 }

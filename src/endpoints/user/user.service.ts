@@ -59,6 +59,7 @@ export class UserService {
       const group = await this.groupService.read(group_id);
 
       membership.group = group;
+      membership.group_id = group.id
 
       await this.membershipRepo.save(membership);
     }
@@ -71,6 +72,7 @@ export class UserService {
       spouse = await this.spouseRepo.create(spouse);
 
       spouse.spouse = user;
+      spouse.spouse_id = user.id;
 
       await this.spouseRepo.save(spouse);
     }
@@ -84,6 +86,7 @@ export class UserService {
         child = await this.childRepo.create(child);
 
         child.parent = user;
+        child.parent_id = user.id
 
         children.push(child);
 
@@ -92,7 +95,11 @@ export class UserService {
     }
 
     user.membership = membership;
+    user.membership_id = membership.id;
+    
     user.spouse = spouse;
+    user.spouse_id = spouse.id
+
     user.children = children;
 
     user.salt = await genSalt();
