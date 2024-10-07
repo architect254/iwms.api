@@ -29,9 +29,7 @@ export class AuthController {
     payload: SignInCredentialsDto,
   ): Promise<{ token: string }> {
     const user = await this.authService.signIn(payload);
-    if (!user) {
-      throw new ConflictException('invalid user credentials');
-    }
+
     delete user.password && delete user.salt;
     const jwtPayload: JwtPayload = { user };
     const token = await this.jwtService.sign(jwtPayload);

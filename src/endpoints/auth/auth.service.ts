@@ -3,6 +3,7 @@ import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -25,6 +26,12 @@ export class AuthService {
   ) {}
 
   async signUp(credentials: SignUpCredentialsDto): Promise<User> {
+    // const persisted_users = await this.userService.readAll(1, 1);
+    // if (persisted_users.length) {
+    //   throw new UnauthorizedException(
+    //     'kindly contact your Welfare Manager to add you',
+    //   );
+    // }
     const { password } = credentials;
 
     const user = new User();
@@ -56,13 +63,9 @@ export class AuthService {
     const { email, password } = credentials;
     const user = await this.userRepo.findOne({ where: { email } });
 
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
+    const isValid = await compare(password, user?.password);
 
-    const isValid = await compare(password, user.password);
-
-    if (!isValid) {
+    if (!user || !isValid) {
       throw new ConflictException('invalid user credentials');
     }
     return user;
