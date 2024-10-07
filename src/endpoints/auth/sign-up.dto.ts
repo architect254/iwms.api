@@ -23,6 +23,10 @@ export class SignUpCredentialsDto extends SignInCredentialsDto {
   id_number: string;
 
   @IsNotEmpty()
+  @IsDate()
+  birth_date: Date;
+
+  @IsNotEmpty()
   @IsString()
   phone_number: string;
 

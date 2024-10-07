@@ -14,11 +14,14 @@ import { User, UserRole } from '../user/entities/user.entity';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
+import { UserService } from '../user/user.service';
+
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private userService: UserService,
   ) {}
 
   async signUp(credentials: SignUpCredentialsDto): Promise<User> {
@@ -27,12 +30,12 @@ export class AuthService {
     const user = new User();
     Object.assign(user, credentials);
 
-    user.birth_date = new Date(Date.now());
     user.role = UserRole.SITE_ADMIN;
-    
+
     user.membership = null;
     user.spouse = null;
-    user.children = [];
+    user.children = null;
+
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);
 

@@ -31,25 +31,30 @@ export class User {
   @UpdateDateColumn()
   update_date?: Date;
 
-  @Column()
+  @Column({ nullable: false })
   first_name: string;
 
-  @Column()
+  @Column({ nullable: false })
   last_name: string;
 
   @Column({ unique: true })
   id_number: string;
 
-  @Column()
+  @Column({ nullable: false })
   birth_date: Date;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   phone_number: string;
 
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   email: string;
 
-  @Column({ type: 'enum', enum: UserRole, default: UserRole.CLIENT })
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    default: UserRole.CLIENT,
+    nullable: false,
+  })
   role: UserRole;
 
   @Column({ nullable: true })
@@ -69,16 +74,16 @@ export class User {
   @Column({ nullable: true })
   spouse_id: string;
 
-  @OneToMany(() => Child, (child) => child.parent)
+  @OneToMany(() => Child, (child) => child.parent, { nullable: true })
   @JoinColumn()
   children: Child[];
 
   @Exclude()
-  @Column()
+  @Column({ nullable: false })
   password: string;
 
   @Exclude()
-  @Column()
+  @Column({ nullable: false })
   salt: string;
 
   constructor() {}
