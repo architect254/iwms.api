@@ -65,7 +65,7 @@ export class UserService {
     return user;
   }
 
-  async read(id): Promise<User> {
+  async read(id: number): Promise<User> {
     const user = await this.userRepo
       .createQueryBuilder('user')
       .where('user.id =:id', { id })

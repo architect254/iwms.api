@@ -3,6 +3,7 @@ import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,25 +15,34 @@ import { User, UserRole } from '../user/entities/user.entity';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
+import { UserService } from '../user/user.service';
+
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepo: Repository<User>,
+    private userService: UserService,
   ) {}
 
   async signUp(credentials: SignUpCredentialsDto): Promise<User> {
+    // const persisted_users = await this.userService.readAll(1, 1);
+    // if (persisted_users.length) {
+    //   throw new UnauthorizedException(
+    //     'kindly contact your Welfare Manager to add you',
+    //   );
+    // }
     const { password } = credentials;
 
     const user = new User();
     Object.assign(user, credentials);
 
-    user.birth_date = new Date(Date.now());
     user.role = UserRole.SITE_ADMIN;
-    
+
     user.membership = null;
     user.spouse = null;
-    user.children = [];
+    user.children = null;
+
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);
 
@@ -53,13 +63,9 @@ export class AuthService {
     const { email, password } = credentials;
     const user = await this.userRepo.findOne({ where: { email } });
 
-    if (!user) {
-      throw new NotFoundException('user not found');
-    }
+    const isValid = await compare(password, user?.password);
 
-    const isValid = await compare(password, user.password);
-
-    if (!isValid) {
+    if (!user || !isValid) {
       throw new ConflictException('invalid user credentials');
     }
     return user;
