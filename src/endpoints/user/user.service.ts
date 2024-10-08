@@ -49,6 +49,11 @@ export class UserService {
 
     user = await this.userRepo.create(user);
 
+    user.salt = await genSalt();
+    user.password = await this.hashPassword('Password@123', user.salt);
+
+    await this.userRepo.save(user);
+
     if (group_id) {
       membership = new Membership();
 
@@ -58,47 +63,51 @@ export class UserService {
 
       const group = await this.groupService.read(group_id);
 
-      membership.group = group;
+      if (!(group === undefined || group === null)) {
+        // membership.group = group;
+        membership.groupId = group.id;
+      }
 
       await this.membershipRepo.save(membership);
+
+      // user.membership = membership;
+      user.membership_id = membership.id;
     }
 
     if (!(spouseDto === undefined || spouseDto === null)) {
       spouse = new Spouse();
 
-      Object.assign(spouse, spouseDto)
+      Object.assign(spouse, spouseDto);
 
       spouse = await this.spouseRepo.create(spouse);
 
-      spouse.spouse = user;
+      // spouse.spouse = user;
+      spouse.spouseId = user.id;
 
       await this.spouseRepo.save(spouse);
+
+      // user.spouse = spouse;
+      user.spouseId = spouse.id;
     }
 
     if (!(childrenDto === undefined || childrenDto === null)) {
       for (let index = 0; index < childrenDto.length; index++) {
         let child = new Child();
-
-        Object.assign(child, childrenDto[index])
+        console.log('child', childrenDto[index], user, spouse);
+        Object.assign(child, childrenDto[index]);
 
         child = await this.childRepo.create(child);
 
-        child.parent = user;
-
-        children.push(child);
+        // child.parent = user;
+        child.parentId = user.id;
 
         await this.childRepo.save(child);
+
+        children.push(child);
       }
+      // user.children = children;
     }
-
-    user.membership = membership;
-    user.spouse = spouse;
-    user.children = children;
-
-    user.salt = await genSalt();
-    user.password = await this.hashPassword('Password@123', user.salt);
-
-    user = await this.userRepo.save(user);
+    await this.userRepo.save(user);
 
     delete user.password && delete user.salt;
 
@@ -110,13 +119,17 @@ export class UserService {
   }
 
   async read(id: number): Promise<User> {
-    const user = await this.userRepo
-      .createQueryBuilder('user')
-      .where('user.id =:id', { id })
-      .leftJoinAndSelect('user.membership', 'membership')
-      .leftJoinAndSelect('user.spouse', 'spouse')
-      .leftJoinAndSelect('user.children', 'children')
-      .getOne();
+    // const user = await this.userRepo
+    //   .createQueryBuilder('user')
+    //   .where('user.id =:id', { id })
+    //   .getOne();
+
+    let user = null;
+
+    user = await this.userRepo.findOne({
+      where: { id },
+      relations: ['children'],
+    });
 
     if (!user || !Object.keys(user).length) {
       const errorMessage = `User Not Found`;
@@ -126,13 +139,18 @@ export class UserService {
     return user;
   }
 
-  async readAll(page: number, take: number): Promise<User[]> {
+  async readAll(page: number, take: number): Promise<any[]> {
     const skip: number = Number(take * (page - 1));
 
     let users = [];
 
     try {
-      users = await this.userRepo.find({ skip, take });
+      users = await this.userRepo.find({
+        skip,
+        take,
+        relations: ['children'],
+      });
+
     } catch (error) {
       users = [];
     }

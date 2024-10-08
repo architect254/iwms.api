@@ -7,6 +7,7 @@ import {
   ValidateNested,
   IsArray,
   IsOptional,
+  IsNumber,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
@@ -41,8 +42,8 @@ export class CoreUserDto {
   role: string;
 
   @IsOptional()
-  @IsString()
-  group_id: string;
+  @IsNumber()
+  group_id: number;
 }
 export class SpouseDto {
   @IsNotEmpty()

@@ -1,4 +1,12 @@
-import { Entity, Column, JoinColumn, ManyToOne, CreateDateColumn, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  JoinColumn,
+  ManyToOne,
+  CreateDateColumn,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 import { User } from './user.entity';
 
@@ -22,11 +30,11 @@ export class Child {
   @Column()
   birth_date: Date;
 
-  @ManyToOne(() => User, { nullable: false })
+  @ManyToOne(() => User, (parent) => parent.children, { nullable: false })
   @JoinColumn()
   parent: User;
 
   @Column({ nullable: false })
-  parent_id?: string;
+  parentId?: number;
   constructor() {}
 }

@@ -20,7 +20,7 @@ export enum UserRole {
   WELFARE_MANAGER = 'Welfare Manager',
   WELFARE_ACCOUNTANT = 'Welfare Accountant',
   WELFARE_SECRETARY = 'Welfare Secretary',
-  WELFARE_CLIENT_MEMBER = 'Client',
+  WELFARE_CLIENT_MEMBER = 'Welfare Client Member',
 }
 
 @Entity('users')
@@ -64,21 +64,18 @@ export class User {
   profile_image?: string;
 
   @OneToOne(() => Membership, { nullable: true })
-  @JoinColumn()
   membership: Membership;
 
   @Column({ nullable: true })
-  membership_id: string;
+  membership_id: number;
 
   @OneToOne(() => Spouse, (spouse) => spouse.spouse, { nullable: true })
-  @JoinColumn()
   spouse: Spouse;
 
   @Column({ nullable: true })
-  spouse_id: string;
+  spouseId: number;
 
   @OneToMany(() => Child, (child) => child.parent, { nullable: true })
-  @JoinColumn()
   children: Child[];
 
   @Exclude()
