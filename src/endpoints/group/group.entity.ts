@@ -29,6 +29,11 @@ export class Group extends AbstractEntity {
   @Column({ nullable: true })
   logo_image?: string;
 
+  @OneToMany(() => Membership, (memberships) => memberships.group, {
+    nullable: true,
+  })
+  memberships: Membership[];
+
   constructor() {
     super();
   }

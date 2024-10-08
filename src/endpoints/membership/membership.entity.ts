@@ -1,6 +1,7 @@
-import { Entity, Column, JoinColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Group } from '../group/group.entity';
 import { AbstractEntity } from '../../core/models/base-entity';
+import { User } from '../user/entities/user.entity';
 
 export enum MembershipStatus {
   ACTIVE = 'Active',
@@ -9,6 +10,10 @@ export enum MembershipStatus {
 
 @Entity('memberships')
 export class Membership extends AbstractEntity {
+  @OneToOne(() => User, { nullable: false })
+  @JoinColumn()
+  member: User;
+
   @Column({
     type: 'enum',
     enum: MembershipStatus,
@@ -16,12 +21,12 @@ export class Membership extends AbstractEntity {
   })
   status: MembershipStatus;
 
-  @ManyToOne(() => Group, { nullable: true })
+  @ManyToOne(() => Group, (group) => group.memberships, { nullable: false })
   @JoinColumn()
   group: Group;
 
   @Column({ nullable: false })
-  group_id: number;
+  groupId: number;
   constructor() {
     super();
   }
