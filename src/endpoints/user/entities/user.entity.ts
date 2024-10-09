@@ -63,19 +63,15 @@ export class User {
   @Column({ nullable: true })
   profile_image?: string;
 
-  @OneToOne(() => Membership, { nullable: true })
+  @OneToOne(() => Membership)
+  @JoinColumn()
   membership: Membership;
 
-  @Column({ nullable: true })
-  membership_id: number;
-
-  @OneToOne(() => Spouse, (spouse) => spouse.spouse, { nullable: true })
+  @OneToOne(() => Spouse, (spouse)=>spouse.spouse)
+  @JoinColumn()
   spouse: Spouse;
 
-  @Column({ nullable: true })
-  spouseId: number;
-
-  @OneToMany(() => Child, (child) => child.parent, { nullable: true })
+  @OneToMany(() => Child, (children) => children.parent )
   children: Child[];
 
   @Exclude()

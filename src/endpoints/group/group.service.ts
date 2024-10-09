@@ -24,8 +24,6 @@ export class GroupService {
 
     Object.assign(group, payload);
 
-    group.creator = initiator;
-
     return await this.save(group);
   }
 
@@ -54,7 +52,6 @@ export class GroupService {
     const group: Group = await this.read(id);
 
     Object.assign(group, payload);
-    group.updator = initiator;
 
     return await this.groupRepo.save(group);
   }

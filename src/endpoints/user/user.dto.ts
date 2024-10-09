@@ -43,7 +43,7 @@ export class CoreUserDto {
 
   @IsOptional()
   @IsNumber()
-  group_id: number;
+  groupId: number;
 }
 export class SpouseDto {
   @IsNotEmpty()
@@ -102,4 +102,38 @@ export class UserDto {
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
   childrenDto: ChildDto[];
+}
+export class UserSearchQueryDto {
+  @IsOptional()
+  @IsString()
+  first_name: string;
+
+  @IsOptional()
+  @IsString()
+  last_name: string;
+
+  @IsOptional()
+  @IsString()
+  id_number: string;
+
+  @IsOptional()
+  @IsDate()
+  @Transform((birth_date) => new Date(birth_date.value))
+  birth_date: Date;
+
+  @IsOptional()
+  @IsString()
+  phone_number: string;
+
+  @IsOptional()
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsString()
+  role: string;
+
+  @IsOptional()
+  @IsNumber()
+  groupId: number;
 }
