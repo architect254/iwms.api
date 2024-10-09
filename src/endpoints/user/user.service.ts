@@ -102,15 +102,12 @@ export class UserService {
 
     Object.assign(user, userDto);
 
-    if (user.membership) {
+    if (groupDto && user.membership) {
       membership = await this.membershipRepo.findOneBy({
         id: user.membership?.id,
       });
 
       membership.status = MembershipStatus.INACTIVE;
-    }
-
-    if (groupDto) {
       if (user.membership?.group) {
         group = await this.groupRepo.findOneBy({
           id: user.membership?.group?.id,
