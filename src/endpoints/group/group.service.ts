@@ -28,24 +28,37 @@ export class GroupService {
   }
 
   async read(id): Promise<Group> {
-    const group = await this.groupRepo
-      .createQueryBuilder('group')
-      .where('group.id =:id', { id })
-      .leftJoinAndSelect('group.createdBy', 'createdBy')
-      .leftJoinAndSelect('group.updatedBy', 'updatedBy')
-      .getOne();
+    let group = null;
+
+    group = await this.groupRepo.findOne({
+      where: { id },
+      relations: { memberships: true },
+    });
 
     if (!group || !Object.keys(group).length) {
-      return null;
+      const errorMessage = `Group not found`;
+      throw new NotFoundException(errorMessage);
     }
 
     return group;
   }
 
   async readAll(page: number, take: number): Promise<Group[]> {
-    const skip: number = take * (page - 1);
+    const skip: number = Number(take * (page - 1));
 
-    return await this.groupRepo.find({ skip, take });
+    let groups = [];
+
+    try {
+      groups = await this.groupRepo.find({
+        skip,
+        take,
+        relations: { memberships: true },
+      });
+    } catch (error) {
+      groups = [];
+    }
+
+    return groups;
   }
 
   async update(id, payload: GroupDto, initiator: User): Promise<Group> {

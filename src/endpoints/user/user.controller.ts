@@ -14,7 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { GetUser } from './get-user.decorator';
 import { UserService } from './user.service';
-import { UserDto, UserSearchQueryDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UserSearchQueryDto } from './user.dto';
 import { User } from './entities/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
@@ -23,7 +23,7 @@ export class UserController {
   constructor(private userService: UserService) {}
 
   @Post()
-  async createUser(@Body() payload: UserDto, @GetUser() initiator: User) {
+  async createUser(@Body() payload: CreateUserDto, @GetUser() initiator: User) {
     return await this.userService.create(payload, initiator);
   }
 
@@ -44,7 +44,7 @@ export class UserController {
   @Put('/:id')
   async updateUser(
     @Param('id') id: number,
-    @Body() payload: UserDto,
+    @Body() payload: UpdateUserDto,
     @GetUser() initiator: User,
   ) {
     return await this.userService.update(id, payload, initiator);

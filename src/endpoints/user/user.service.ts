@@ -14,10 +14,11 @@ import { Child } from './entities/child.entity';
 import { Spouse } from './entities/spouse.entity';
 import { User } from './entities/user.entity';
 
-import { UserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { MembershipService } from '../membership/membership.service';
 import { GroupService } from '../group/group.service';
 import { Membership, MembershipStatus } from '../membership/membership.entity';
+import { Group } from '../group/group.entity';
 
 @Injectable()
 export class UserService {
@@ -30,77 +31,14 @@ export class UserService {
     private childRepo: Repository<Child>,
     @InjectRepository(Membership)
     private membershipRepo: Repository<Membership>,
-    private groupService: GroupService,
+    @InjectRepository(Group)
+    private groupRepo: Repository<Group>,
   ) {}
 
-  async create(payload: UserDto, initiator: User): Promise<User> {
-    const { userDto, spouseDto, childrenDto } = payload;
-    const { groupId } = userDto;
+  async create(payload: CreateUserDto, initiator: User): Promise<User> {
+    const user = await this.userRepo.create(new User());
 
-    delete userDto.groupId;
-
-    let membership: Membership = null;
-    let spouse: Spouse = null;
-    let children: Child[] = [];
-
-    let user = new User();
-
-    user = await this.userRepo.create(user);
-
-    Object.assign(user, userDto);
-
-    user.salt = await genSalt();
-    user.password = await this.hashPassword('Password@123', user.salt);
-
-    membership = new Membership();
-
-    membership = await this.membershipRepo.create(membership);
-
-    membership.status = MembershipStatus.INACTIVE;
-
-    if (groupId) {
-      const group = await this.groupService.read(groupId);
-
-      if (!(group === undefined || group === null)) {
-        membership.group = group;
-      }
-    }
-
-    await this.membershipRepo.save(membership);
-
-    user.membership = membership;
-
-    if (!(spouseDto === undefined || spouseDto === null)) {
-      spouse = new Spouse();
-
-      spouse = await this.spouseRepo.create(spouse);
-
-      Object.assign(spouse, spouseDto);
-
-      await this.spouseRepo.save(spouse);
-
-      user.spouse = spouse;
-    }
-
-    if (!(childrenDto === undefined || childrenDto === null)) {
-      for (let index = 0; index < childrenDto.length; index++) {
-        let child = new Child();
-
-        child = await this.childRepo.create(child);
-
-        Object.assign(child, childrenDto[index]);
-
-        await this.childRepo.save(child);
-
-        children.push(child);
-      }
-      user.children = children;
-    }
-    await this.userRepo.save(user);
-
-    delete user.password && delete user.salt;
-
-    return user;
+    return this.upsert(user, payload, initiator);
   }
 
   async hashPassword(input: string, salt: string): Promise<string> {
@@ -116,7 +54,7 @@ export class UserService {
     });
 
     if (!user || !Object.keys(user).length) {
-      const errorMessage = `User Not Found`;
+      const errorMessage = `User not found`;
       throw new NotFoundException(errorMessage);
     }
 
@@ -138,11 +76,6 @@ export class UserService {
         take,
         relations: { membership: true, spouse: true, children: true },
       });
-      await users.forEach(async (user) => {
-        user.spouse = await this.spouseRepo.findOne({
-          where: { id: user.spouse?.id },
-        });
-      });
     } catch (error) {
       users = [];
     }
@@ -150,12 +83,89 @@ export class UserService {
     return users;
   }
 
-  async update(id, payload: UserDto, initiator: User): Promise<User> {
-    const user: User = await this.read(id);
+  async update(id, payload: UpdateUserDto, initiator: User): Promise<User> {
+    const user = await this.userRepo.findOneBy({ id });
+    return this.upsert(user, payload, initiator);
+  }
 
-    Object.assign(user, payload);
+  async upsert(
+    user: User,
+    payload: UpdateUserDto,
+    initiator: User,
+  ): Promise<User> {
+    const { userDto, spouseDto, childrenDto, groupDto } = payload;
 
-    return await this.userRepo.save(user);
+    let membership: Membership = null;
+    let group: Group = null;
+    let spouse: Spouse = null;
+    let children: Child[] = [];
+
+    Object.assign(user, userDto);
+
+    if (user.membership) {
+      membership = await this.membershipRepo.findOneBy({
+        id: user.membership?.id,
+      });
+
+      membership.status = MembershipStatus.INACTIVE;
+    }
+
+    if (groupDto) {
+      if (user.membership?.group) {
+        group = await this.groupRepo.findOneBy({
+          id: user.membership?.group?.id,
+        });
+      } else {
+        group = new Group();
+        group = await this.groupRepo.create(group);
+      }
+      Object.assign(group);
+    } else {
+      group = null;
+    }
+    membership.group = group;
+
+    await this.membershipRepo.save(membership);
+
+    user.membership = membership;
+
+    if (spouseDto) {
+      if (user.spouse) {
+        spouse = await this.spouseRepo.findOneBy({ id: user.spouse?.id });
+      } else {
+        spouse = new Spouse();
+        spouse = await this.spouseRepo.create(spouse);
+      }
+      Object.assign(spouse, spouseDto);
+    } else {
+      spouse = null;
+    }
+    await this.spouseRepo.save(spouse);
+
+    user.spouse = spouse;
+
+    if (childrenDto) {
+      if (user.children) {
+        children = await this.childRepo.findBy({ parent: user });
+      } else {
+        children = new Array<Child>(childrenDto.length);
+        children = await this.childRepo.create(children);
+      }
+      for (let index = 0; index < childrenDto.length; index++) {
+        Object.assign(children[index], childrenDto[index]);
+      }
+    } else {
+      children = [];
+    }
+    await this.childRepo.save(children);
+
+    user.children = children;
+
+    await this.userRepo.save(user);
+
+    delete user.password && delete user.salt;
+
+    return user;
   }
 
   async drop(id): Promise<void> {
