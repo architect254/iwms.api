@@ -40,12 +40,12 @@ export class CoreUserDto {
   @IsNotEmpty()
   @IsString()
   role: string;
-
-  @IsOptional()
-  @IsNumber()
-  groupId: number;
 }
 export class SpouseDto {
+  @IsOptional()
+  @IsNumber()
+  spouseId: number;
+
   @IsNotEmpty()
   @IsString()
   first_name: string;
@@ -72,6 +72,10 @@ export class SpouseDto {
   email: string;
 }
 export class ChildDto {
+  @IsOptional()
+  @IsNumber()
+  childId: number;
+
   @IsNotEmpty()
   @IsString()
   first_name: string;
@@ -85,7 +89,28 @@ export class ChildDto {
   @Transform((birth_date) => new Date(birth_date.value))
   birth_date: Date;
 }
-export class UserDto {
+export class GroupDto {
+  @IsOptional()
+  @IsString()
+  groupId: number;
+
+  @IsOptional()
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  phone_number: string;
+
+  @IsOptional()
+  @IsEmail()
+  email: string;
+
+  @IsOptional()
+  @IsEmail()
+  logo_image: string;
+}
+export class CreateUserDto {
   @IsObject()
   @ValidateNested()
   @Type(() => CoreUserDto)
@@ -102,6 +127,36 @@ export class UserDto {
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
   childrenDto: ChildDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => GroupDto)
+  groupDto: GroupDto;
+}
+export class UpdateUserDto {
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CoreUserDto)
+  userDto: CoreUserDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => SpouseDto)
+  spouseDto: SpouseDto;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ChildDto)
+  childrenDto: ChildDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => GroupDto)
+  groupDto: GroupDto;
 }
 export class UserSearchQueryDto {
   @IsOptional()
