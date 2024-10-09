@@ -38,11 +38,8 @@ export class Spouse {
   @Column({ unique: true })
   email: string;
 
-  @OneToOne(() => User, (spouse) => spouse.spouse, { nullable: false })
-  @JoinColumn()
-  spouse: User;
+  @OneToOne(() => User, (user) => user.spouse)
+  spouse: Spouse;
 
-  @Column({ nullable: false })
-  spouseId?: number;
   constructor() {}
 }

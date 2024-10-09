@@ -25,9 +25,6 @@ export class MembershipService {
 
     Object.assign(membership, payload);
 
-    membership.creator = initiator;
-    membership.updator = initiator;
-
     return await this.save(membership);
   }
 
@@ -69,8 +66,6 @@ export class MembershipService {
     const membership: Membership = await this.read(id);
 
     Object.assign(membership, payload);
-
-    membership.updator = initiator;
 
     return await this.membershipRepo.save(membership);
   }

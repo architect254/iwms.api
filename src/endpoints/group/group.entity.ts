@@ -5,15 +5,14 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from '../user/entities/user.entity';
-
-import { AbstractEntity } from '../../core/models/base-entity';
 import { Membership } from '../membership/membership.entity';
 
 @Entity('groups')
-export class Group extends AbstractEntity {
+export class Group {
   @PrimaryGeneratedColumn()
   id?: number;
 
@@ -26,15 +25,17 @@ export class Group extends AbstractEntity {
   @Column({ unique: true })
   phone_number: string;
 
-  @Column({ nullable: true })
+  @Column()
   logo_image?: string;
 
-  @OneToMany(() => Membership, (memberships) => memberships.group, {
-    nullable: true,
-  })
+  @OneToMany(() => Membership, (memberships) => memberships.group)
   memberships: Membership[];
 
-  constructor() {
-    super();
-  }
+  @CreateDateColumn()
+  create_date?: Date;
+
+  @UpdateDateColumn()
+  update_date?: Date;
+
+  constructor() {}
 }

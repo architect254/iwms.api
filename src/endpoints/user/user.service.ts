@@ -35,9 +35,9 @@ export class UserService {
 
   async create(payload: UserDto, initiator: User): Promise<User> {
     const { userDto, spouseDto, childrenDto } = payload;
-    const { group_id } = userDto;
+    const { groupId } = userDto;
 
-    delete userDto.group_id;
+    delete userDto.groupId;
 
     let membership: Membership = null;
     let spouse: Spouse = null;
@@ -45,67 +45,56 @@ export class UserService {
 
     let user = new User();
 
-    Object.assign(user, userDto);
-
     user = await this.userRepo.create(user);
+
+    Object.assign(user, userDto);
 
     user.salt = await genSalt();
     user.password = await this.hashPassword('Password@123', user.salt);
 
-    await this.userRepo.save(user);
+    membership = new Membership();
 
-    if (group_id) {
-      membership = new Membership();
+    membership = await this.membershipRepo.create(membership);
 
-      membership.status = MembershipStatus.INACTIVE;
+    membership.status = MembershipStatus.INACTIVE;
 
-      membership = await this.membershipRepo.create(membership);
-
-      const group = await this.groupService.read(group_id);
+    if (groupId) {
+      const group = await this.groupService.read(groupId);
 
       if (!(group === undefined || group === null)) {
-        // membership.group = group;
-        membership.groupId = group.id;
+        membership.group = group;
       }
-
-      await this.membershipRepo.save(membership);
-
-      // user.membership = membership;
-      user.membership_id = membership.id;
     }
+
+    await this.membershipRepo.save(membership);
+
+    user.membership = membership;
 
     if (!(spouseDto === undefined || spouseDto === null)) {
       spouse = new Spouse();
 
-      Object.assign(spouse, spouseDto);
-
       spouse = await this.spouseRepo.create(spouse);
 
-      // spouse.spouse = user;
-      spouse.spouseId = user.id;
+      Object.assign(spouse, spouseDto);
 
       await this.spouseRepo.save(spouse);
 
-      // user.spouse = spouse;
-      user.spouseId = spouse.id;
+      user.spouse = spouse;
     }
 
     if (!(childrenDto === undefined || childrenDto === null)) {
       for (let index = 0; index < childrenDto.length; index++) {
         let child = new Child();
-        console.log('child', childrenDto[index], user, spouse);
-        Object.assign(child, childrenDto[index]);
 
         child = await this.childRepo.create(child);
 
-        // child.parent = user;
-        child.parentId = user.id;
+        Object.assign(child, childrenDto[index]);
 
         await this.childRepo.save(child);
 
         children.push(child);
       }
-      // user.children = children;
+      user.children = children;
     }
     await this.userRepo.save(user);
 
@@ -119,16 +108,11 @@ export class UserService {
   }
 
   async read(id: number): Promise<User> {
-    // const user = await this.userRepo
-    //   .createQueryBuilder('user')
-    //   .where('user.id =:id', { id })
-    //   .getOne();
-
     let user = null;
 
     user = await this.userRepo.findOne({
       where: { id },
-      relations: ['children'],
+      relations: { membership: true, spouse: true, children: true },
     });
 
     if (!user || !Object.keys(user).length) {
@@ -139,7 +123,11 @@ export class UserService {
     return user;
   }
 
-  async readAll(page: number, take: number): Promise<any[]> {
+  async readAll(
+    page: number,
+    take: number,
+    userSearchQueryParams,
+  ): Promise<any[]> {
     const skip: number = Number(take * (page - 1));
 
     let users = [];
@@ -148,9 +136,13 @@ export class UserService {
       users = await this.userRepo.find({
         skip,
         take,
-        relations: ['children'],
+        relations: { membership: true, spouse: true, children: true },
       });
-
+      await users.forEach(async (user) => {
+        user.spouse = await this.spouseRepo.findOne({
+          where: { id: user.spouse?.id },
+        });
+      });
     } catch (error) {
       users = [];
     }

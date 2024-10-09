@@ -1,6 +1,13 @@
-import { Entity, Column, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import {
+  Entity,
+  Column,
+  ManyToOne,
+  OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Group } from '../group/group.entity';
-import { AbstractEntity } from '../../core/models/base-entity';
 import { User } from '../user/entities/user.entity';
 
 export enum MembershipStatus {
@@ -9,11 +16,10 @@ export enum MembershipStatus {
 }
 
 @Entity('memberships')
-export class Membership extends AbstractEntity {
-  @OneToOne(() => User, { nullable: false })
-  @JoinColumn()
-  member: User;
-
+export class Membership {
+  @PrimaryGeneratedColumn()
+  id?: number;
+  
   @Column({
     type: 'enum',
     enum: MembershipStatus,
@@ -21,13 +27,17 @@ export class Membership extends AbstractEntity {
   })
   status: MembershipStatus;
 
-  @ManyToOne(() => Group, (group) => group.memberships, { nullable: false })
-  @JoinColumn()
+  @OneToOne(() => User, (member) => member.membership)
+  member: User;
+
+  @ManyToOne(() => Group, (group) => group.memberships, { eager: true })
   group: Group;
 
-  @Column({ nullable: false })
-  groupId: number;
-  constructor() {
-    super();
-  }
+  @CreateDateColumn()
+  create_date?: Date;
+
+  @UpdateDateColumn()
+  update_date?: Date;
+
+  constructor() {}
 }

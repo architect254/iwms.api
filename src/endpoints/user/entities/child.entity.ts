@@ -30,11 +30,7 @@ export class Child {
   @Column()
   birth_date: Date;
 
-  @ManyToOne(() => User, (parent) => parent.children, { nullable: false })
-  @JoinColumn()
+  @ManyToOne(() => User, (parent) => parent.children)
   parent: User;
-
-  @Column({ nullable: false })
-  parentId?: number;
   constructor() {}
 }

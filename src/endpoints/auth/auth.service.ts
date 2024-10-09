@@ -41,7 +41,6 @@ export class AuthService {
 
     user.membership = null;
     user.spouse = null;
-    user.children = null;
 
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);
