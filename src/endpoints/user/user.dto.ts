@@ -41,6 +41,11 @@ export class CoreUserDto {
   @IsString()
   role: string;
 }
+export class MembershipDto {
+  @IsNotEmpty()
+  @IsString()
+  status: string;
+}
 export class SpouseDto {
   @IsOptional()
   @IsNumber()
@@ -89,7 +94,7 @@ export class ChildDto {
   @Transform((birth_date) => new Date(birth_date.value))
   birth_date: Date;
 }
-export class GroupDto {
+export class WelfareDto {
   @IsOptional()
   @IsString()
   groupId: number;
@@ -119,6 +124,12 @@ export class CreateUserDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
+  @Type(() => MembershipDto)
+  membershipDto: MembershipDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
   @Type(() => SpouseDto)
   spouseDto: SpouseDto;
 
@@ -131,8 +142,8 @@ export class CreateUserDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
-  @Type(() => GroupDto)
-  groupDto: GroupDto;
+  @Type(() => WelfareDto)
+  welfareDto: WelfareDto;
 }
 export class UpdateUserDto {
   @IsObject()
@@ -143,6 +154,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
+  @Type(() => MembershipDto)
+  membershipDto: MembershipDto;
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
   @Type(() => SpouseDto)
   spouseDto: SpouseDto;
 
@@ -155,8 +172,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
-  @Type(() => GroupDto)
-  groupDto: GroupDto;
+  @Type(() => WelfareDto)
+  welfareDto: WelfareDto;
 }
 export class UserSearchQueryDto {
   @IsOptional()

@@ -6,8 +6,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from 'typeorm';
-import { Group } from '../group/group.entity';
+import { Welfare } from '../welfare/welfare.entity';
 import { User } from '../user/entities/user.entity';
 
 export enum MembershipStatus {
@@ -19,7 +20,7 @@ export enum MembershipStatus {
 export class Membership {
   @PrimaryGeneratedColumn()
   id?: number;
-  
+
   @Column({
     type: 'enum',
     enum: MembershipStatus,
@@ -30,8 +31,8 @@ export class Membership {
   @OneToOne(() => User, (member) => member.membership)
   member: User;
 
-  @ManyToOne(() => Group, (group) => group.memberships, { eager: true })
-  group: Group;
+  @ManyToOne(() => Welfare, (welfare) => welfare.memberships)
+  welfare: Welfare;
 
   @CreateDateColumn()
   create_date?: Date;

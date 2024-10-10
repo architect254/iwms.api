@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsEmail, IsDate } from 'class-validator';
 
-export class GroupDto {
+export class WelfareDto {
   @IsString()
   @IsNotEmpty()
   name: string;

@@ -20,7 +20,7 @@ export class MembershipService {
     private membershipRepo: Repository<Membership>,
   ) {}
 
-  async create(payload: MembershipDto, initiator: User): Promise<Membership> {
+  async create(payload: MembershipDto): Promise<Membership> {
     const membership = new Membership();
 
     Object.assign(membership, payload);
@@ -29,15 +29,15 @@ export class MembershipService {
   }
 
   async read(id): Promise<Membership> {
-    const membership = await this.membershipRepo
-      .createQueryBuilder('membership')
-      .where('membership.id =:id', { id })
-      .leftJoinAndSelect('membership.createdBy', 'createdBy')
-      .leftJoinAndSelect('membership.updatedBy', 'updatedBy')
-      .getOne();
+    let membership = null;
+
+    membership = await this.membershipRepo.findOne({
+      where: { id },
+      relations: { welfare: true },
+    });
 
     if (!membership || !Object.keys(membership).length) {
-      const errorMessage = `Membership Not Found`;
+      const errorMessage = `Membership not found`;
       throw new NotFoundException(errorMessage);
     }
 
@@ -50,7 +50,11 @@ export class MembershipService {
     let memberships = [];
 
     try {
-      memberships = await this.membershipRepo.find({ skip, take });
+      memberships = await this.membershipRepo.find({
+        skip,
+        take,
+        relations: { welfare: true },
+      });
     } catch (error) {
       memberships = [];
     }
@@ -58,11 +62,7 @@ export class MembershipService {
     return memberships;
   }
 
-  async update(
-    id,
-    payload: MembershipDto,
-    initiator: User,
-  ): Promise<Membership> {
+  async update(id, payload: MembershipDto): Promise<Membership> {
     const membership: Membership = await this.read(id);
 
     Object.assign(membership, payload);

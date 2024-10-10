@@ -29,7 +29,7 @@ export class MembershipController {
     @Body() payload: MembershipDto,
     @GetUser() initiator: User,
   ) {
-    return await this.membershipService.create(payload, initiator);
+    return await this.membershipService.create(payload);
   }
 
   @Get('/:id')
@@ -51,7 +51,7 @@ export class MembershipController {
     @Body() payload: MembershipDto,
     @GetUser() initiator: User,
   ) {
-    return await this.membershipService.update(id, payload, initiator);
+    return await this.membershipService.update(id, payload);
   }
 
   @Delete('/:id')

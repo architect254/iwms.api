@@ -24,7 +24,7 @@ export class UserController {
 
   @Post()
   async createUser(@Body() payload: CreateUserDto, @GetUser() initiator: User) {
-    return await this.userService.create(payload, initiator);
+    return await this.userService.create(payload);
   }
 
   @Get('/:id')
@@ -47,7 +47,7 @@ export class UserController {
     @Body() payload: UpdateUserDto,
     @GetUser() initiator: User,
   ) {
-    return await this.userService.update(id, payload, initiator);
+    return await this.userService.update(id, payload);
   }
 
   @Delete('/:id')

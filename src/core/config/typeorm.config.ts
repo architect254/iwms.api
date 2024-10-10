@@ -13,4 +13,6 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   database: process.env.RHS_DB_NAME || DB_CONFIG.database,
   synchronize: process.env.TYPEORM_SYNC || DB_CONFIG.synchronize,
   entities: [__dirname + '../../../**/*.entity.{ts,js}'],
+  logging: 'all',
+  logger: 'simple-console',
 };
