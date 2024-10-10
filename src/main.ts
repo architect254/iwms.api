@@ -21,6 +21,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: (origin, cb) => {
+      console.log('ORIGIN', origin);
       if (origin?.includes('iwms.com')) {
         cb(null, 'iwms.com');
       } else {
