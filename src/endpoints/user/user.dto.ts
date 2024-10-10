@@ -206,6 +206,10 @@ export class UserSearchQueryDto {
   role: string;
 
   @IsOptional()
+  @IsString()
+  status: string;
+
+  @IsOptional()
   @IsNumber()
   groupId: number;
 }

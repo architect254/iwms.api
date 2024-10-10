@@ -36,7 +36,7 @@ export class UserController {
   async getUsers(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('take', ParseIntPipe) take: number = 10,
-    @Query() queryParams?: UserSearchQueryDto,
+    @Query() queryParams: UserSearchQueryDto,
   ) {
     return await this.userService.readAll(page, take, queryParams);
   }

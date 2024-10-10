@@ -14,7 +14,7 @@ import { Child } from './entities/child.entity';
 import { Spouse } from './entities/spouse.entity';
 import { User } from './entities/user.entity';
 
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, UserSearchQueryDto } from './user.dto';
 import { Membership, MembershipStatus } from '../membership/membership.entity';
 import { Welfare } from '../welfare/welfare.entity';
 
@@ -68,7 +68,7 @@ export class UserService {
   async readAll(
     page: number,
     take: number,
-    userSearchQueryParams,
+    userSearchQueryParams: UserSearchQueryDto,
   ): Promise<any[]> {
     const skip: number = Number(take * (page - 1));
 

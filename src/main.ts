@@ -20,7 +20,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
 
   app.enableCors({
-    origin: 'https://iwms-5vlj.onrender.com/',
+    origin: (origin, cb) => {
+      if (origin?.includes('iwms.com')) {
+        cb(null, 'iwms.com');
+      } else {
+        cb(null, 'https://iwms-5vlj.onrender.com/');
+      }
+    },
     credentials: true,
     allowedHeaders: ['Content-Type'],
     methods: ['GET', 'POST', 'DELETE', 'UPDATE', 'PUT'],
