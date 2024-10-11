@@ -88,7 +88,7 @@ export class UserService {
   }
 
   async update(id, payload: UpdateUserDto): Promise<User> {
-    const user = await this.userRepo.findOneBy({ id });
+    const user = await this.read(id);
     return this.upsert(user, payload);
   }
 
@@ -116,26 +116,26 @@ export class UserService {
 
       Object.assign(membership, membershipDto);
 
-      await this.membershipRepo.save(membership);
-
       if (welfareDto) {
-        if (user.membership?.welfare) {
+        if (welfareDto.id) {
           welfare = await this.welfareRepo.findOneBy({
-            id: user.membership?.welfare?.id,
+            id: welfareDto.id,
           });
         } else {
           welfare = new Welfare();
           welfare.memberships = [];
           welfare = await this.welfareRepo.create(welfare);
+
+          Object.assign(welfare, welfareDto);
         }
-
-        Object.assign(welfare, welfareDto);
-
         await this.welfareRepo.save(welfare);
       }
       membership.welfare = welfare;
 
+      await this.membershipRepo.save(membership);
+
       if (spouseDto) {
+        console.log('spouse', user.spouse?.id);
         if (user.spouse) {
           spouse = await this.spouseRepo.findOneBy({ id: user.spouse?.id });
         } else {
@@ -144,22 +144,26 @@ export class UserService {
         }
 
         Object.assign(spouse, spouseDto);
-
-        await this.spouseRepo.save(spouse);
+      } else {
+        spouse = null;
       }
+      await this.spouseRepo.save(spouse);
 
       if (childrenDto) {
         if (user.children) {
-          children = await this.childRepo.findBy({ parent: user });
+          children = await this.childRepo.findBy({ parentId: user.id });
         } else {
           children = new Array<Child>(childrenDto.length).fill(new Child());
           children = await this.childRepo.create(children);
         }
+
         for (let index = 0; index < childrenDto.length; index++) {
           Object.assign(children[index], childrenDto[index]);
         }
-        await this.childRepo.save(children);
+      } else {
+        children = null;
       }
+      await this.childRepo.save(children);
     }
 
     user.membership = membership;

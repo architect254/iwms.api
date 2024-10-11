@@ -96,8 +96,8 @@ export class ChildDto {
 }
 export class WelfareDto {
   @IsOptional()
-  @IsString()
-  groupId: number;
+  @IsNumber()
+  id: number;
 
   @IsOptional()
   @IsString()

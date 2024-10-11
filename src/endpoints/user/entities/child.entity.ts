@@ -32,5 +32,8 @@ export class Child {
 
   @ManyToOne(() => User, (parent) => parent.children)
   parent: User;
+
+  @Column()
+  parentId: number;
   constructor() {}
 }
