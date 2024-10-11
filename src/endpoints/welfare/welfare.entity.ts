@@ -11,8 +11,8 @@ import {
 
 import { Membership } from '../membership/membership.entity';
 
-@Entity('groups')
-export class Group {
+@Entity('welfares')
+export class Welfare {
   @PrimaryGeneratedColumn()
   id?: number;
 
@@ -25,10 +25,10 @@ export class Group {
   @Column({ unique: true })
   phone_number: string;
 
-  @Column()
-  logo_image?: string;
+  @Column({ nullable: true })
+  logo_url?: string;
 
-  @OneToMany(() => Membership, (memberships) => memberships.group)
+  @OneToMany(() => Membership, (memberships) => memberships.welfare)
   memberships: Membership[];
 
   @CreateDateColumn()

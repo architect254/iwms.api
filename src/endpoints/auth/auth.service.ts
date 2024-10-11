@@ -39,9 +39,6 @@ export class AuthService {
 
     user.role = UserRole.SITE_ADMIN;
 
-    user.membership = null;
-    user.spouse = null;
-
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);
 
@@ -50,7 +47,7 @@ export class AuthService {
     } catch (error) {
       if (error.errno === 1062) {
         throw new ConflictException(
-          'user with same credentials already exists',
+          'User with same credentials already exists',
         );
       } else {
         throw new InternalServerErrorException(error.message);
@@ -62,12 +59,15 @@ export class AuthService {
     const { email, password } = credentials;
     const user = await this.userRepo.findOne({ where: { email } });
 
+    if (!user) {
+      throw new NotFoundException('This user does not exist in our database');
+    }
     const isValid = await compare(password, user?.password);
 
-    if (!user || !isValid) {
-      throw new ConflictException('invalid user credentials');
+    if (!isValid) {
+      throw new ConflictException('Invalid user credentials');
     }
-    
+
     delete user.password && delete user.salt;
 
     return user;

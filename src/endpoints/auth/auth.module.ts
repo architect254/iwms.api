@@ -24,11 +24,10 @@ const JWT_CONFIG = config.get('jwt');
         expiresIn: JWT_CONFIG.expiresIn,
       },
     }),
-    TypeOrmModule.forFeature([User]),
     UserModule,
   ],
   providers: [JwtStrategy, AuthService],
   controllers: [AuthController],
-  exports: [PassportModule, JwtModule, UserModule, AuthService],
+  exports: [AuthService, UserModule, JwtModule, PassportModule],
 })
 export class AuthModule {}

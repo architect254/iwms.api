@@ -24,7 +24,7 @@ export class UserController {
 
   @Post()
   async createUser(@Body() payload: CreateUserDto, @GetUser() initiator: User) {
-    return await this.userService.create(payload, initiator);
+    return await this.userService.create(payload);
   }
 
   @Get('/:id')
@@ -36,7 +36,7 @@ export class UserController {
   async getUsers(
     @Query('page', ParseIntPipe) page: number = 1,
     @Query('take', ParseIntPipe) take: number = 10,
-    @Query() queryParams?: UserSearchQueryDto,
+    @Query() queryParams: UserSearchQueryDto,
   ) {
     return await this.userService.readAll(page, take, queryParams);
   }
@@ -47,7 +47,7 @@ export class UserController {
     @Body() payload: UpdateUserDto,
     @GetUser() initiator: User,
   ) {
-    return await this.userService.update(id, payload, initiator);
+    return await this.userService.update(id, payload);
   }
 
   @Delete('/:id')
