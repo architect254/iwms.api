@@ -14,7 +14,7 @@ import { Child } from './entities/child.entity';
 import { Spouse } from './entities/spouse.entity';
 import { User } from './entities/user.entity';
 
-import { CreateUserDto, UpdateUserDto, UserSearchQueryDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, SearchQueryDto } from './user.dto';
 import { Membership, MembershipStatus } from '../membership/membership.entity';
 import { Welfare } from '../welfare/welfare.entity';
 
@@ -42,20 +42,14 @@ export class UserService {
   async read(id: number): Promise<User> {
     let user = null;
 
-    user = await this.userRepo
-      .findOne({
-        where: { id },
-        relations: { membership: true, spouse: true, children: true },
-      })
-      .then(async (user) => {
-        if (user.membership) {
-          const welfare = await this.welfareRepo.findOneBy({
-            id: user.membership?.welfare?.id,
-          });
-          user.membership.welfare = welfare;
-        }
-        return user;
-      });
+    user = await this.userRepo.findOne({
+      where: { id },
+      relations: {
+        membership: { welfare: true },
+        spouse: true,
+        children: true,
+      },
+    });
 
     if (!user || !Object.keys(user).length) {
       const errorMessage = `User not found`;
@@ -68,7 +62,7 @@ export class UserService {
   async readAll(
     page: number,
     take: number,
-    userSearchQueryParams: UserSearchQueryDto,
+    searchQueryParams: SearchQueryDto,
   ): Promise<any[]> {
     const skip: number = Number(take * (page - 1));
 
@@ -78,7 +72,11 @@ export class UserService {
       users = await this.userRepo.find({
         skip,
         take,
-        relations: { membership: true, spouse: true, children: true },
+        relations: {
+          membership: { welfare: true },
+          spouse: true,
+          children: true,
+        },
       });
     } catch (error) {
       users = [];
