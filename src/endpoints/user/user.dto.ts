@@ -175,7 +175,7 @@ export class UpdateUserDto {
   @Type(() => WelfareDto)
   welfareDto: WelfareDto;
 }
-export class UserSearchQueryDto {
+export class SearchQueryDto {
   @IsOptional()
   @IsString()
   first_name: string;

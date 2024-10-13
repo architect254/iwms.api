@@ -14,7 +14,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 import { GetUser } from './get-user.decorator';
 import { UserService } from './user.service';
-import { CreateUserDto, UpdateUserDto, UserSearchQueryDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto, SearchQueryDto } from './user.dto';
 import { User } from './entities/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
@@ -35,10 +35,10 @@ export class UserController {
   @Get()
   async getUsers(
     @Query('page', ParseIntPipe) page: number = 1,
-    @Query('take', ParseIntPipe) take: number = 10,
-    @Query() queryParams: UserSearchQueryDto,
+    @Query('take', ParseIntPipe) take: number = 100,
+    @Query() queryParams: SearchQueryDto,
   ) {
-    return await this.userService.readAll(page, take, queryParams);
+    return await this.userService.readAll(1, 100, {} as SearchQueryDto);
   }
 
   @Put('/:id')
