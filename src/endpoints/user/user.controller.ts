@@ -9,6 +9,7 @@ import {
   Delete,
   ParseIntPipe,
   Options,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -16,6 +17,10 @@ import { GetUser } from './get-user.decorator';
 import { UserService } from './user.service';
 import { CreateUserDto, UpdateUserDto, SearchQueryDto } from './user.dto';
 import { User } from './entities/user.entity';
+import {
+  PaginationRequestDto,
+  PaginationTransformPipe,
+} from 'src/core/models/pagination-request.dto';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -34,11 +39,14 @@ export class UserController {
 
   @Get()
   async getUsers(
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('take', ParseIntPipe) take: number = 100,
-    @Query() queryParams: SearchQueryDto,
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query()
+    queryParams: SearchQueryDto,
   ) {
-    return await this.userService.readAll(1, 100, {} as SearchQueryDto);
+    const { page, take } = paginationRequest;
+    console.log('params', queryParams, paginationRequest);
+    return await this.userService.readMany(page, take, queryParams);
   }
 
   @Put('/:id')

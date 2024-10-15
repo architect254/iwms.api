@@ -11,15 +11,18 @@ import { Repository } from 'typeorm';
 import { Welfare } from './welfare.entity';
 import { WelfareDto } from './welfare.dto';
 import { User } from 'src/endpoints/user/entities/user.entity';
+import { Membership } from '../membership/membership.entity';
 
 @Injectable()
 export class WelfareService {
   constructor(
     @InjectRepository(Welfare)
     private welfareRepo: Repository<Welfare>,
+    @InjectRepository(Membership)
+    private membershipRepo: Repository<Membership>,
   ) {}
 
-  async create(payload: WelfareDto, ): Promise<Welfare> {
+  async create(payload: WelfareDto): Promise<Welfare> {
     const welfare = new Welfare();
 
     Object.assign(welfare, payload);
@@ -52,7 +55,11 @@ export class WelfareService {
       welfares = await this.welfareRepo.find({
         skip,
         take,
-        relations: { memberships: true },
+        relations: {
+          memberships: {
+            member: true,
+          },
+        },
       });
     } catch (error) {
       welfares = [];
@@ -61,7 +68,7 @@ export class WelfareService {
     return welfares;
   }
 
-  async update(id, payload: WelfareDto, ): Promise<Welfare> {
+  async update(id, payload: WelfareDto): Promise<Welfare> {
     const welfare: Welfare = await this.read(id);
 
     Object.assign(welfare, payload);

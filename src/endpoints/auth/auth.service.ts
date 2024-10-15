@@ -37,7 +37,7 @@ export class AuthService {
     const user = new User();
     Object.assign(user, credentials);
 
-    user.role = UserRole.SITE_ADMIN;
+    user.user_role = UserRole.SITE_ADMIN;
 
     user.salt = await genSalt();
     user.password = await this.hashPassword(password, user.salt);

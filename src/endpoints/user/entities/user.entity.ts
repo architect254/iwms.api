@@ -17,10 +17,7 @@ import { Membership } from 'src/endpoints/membership/membership.entity';
 
 export enum UserRole {
   SITE_ADMIN = `Site Admin`,
-  WELFARE_MANAGER = 'Welfare Manager',
-  WELFARE_ACCOUNTANT = 'Welfare Accountant',
-  WELFARE_SECRETARY = 'Welfare Secretary',
-  WELFARE_CLIENT_MEMBER = 'Welfare Client Member',
+  CLIENT = 'Client',
 }
 
 @Entity('users')
@@ -55,10 +52,10 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.WELFARE_CLIENT_MEMBER,
+    default: UserRole[UserRole.CLIENT],
     nullable: false,
   })
-  role: UserRole;
+  user_role: UserRole;
 
   @Column({ nullable: true })
   profile_image?: string;
@@ -67,11 +64,11 @@ export class User {
   @JoinColumn()
   membership: Membership;
 
-  @OneToOne(() => Spouse, (spouse)=>spouse.spouse)
+  @OneToOne(() => Spouse, (spouse) => spouse.spouse)
   @JoinColumn()
   spouse: Spouse;
 
-  @OneToMany(() => Child, (children) => children.parent )
+  @OneToMany(() => Child, (children) => children.parent)
   children: Child[];
 
   @Exclude()

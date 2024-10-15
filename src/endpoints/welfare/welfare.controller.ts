@@ -33,7 +33,7 @@ export class WelfareController {
   }
 
   @Get()
-  async getAllWelfares(
+  async getWelfares(
     @Query('page', ParseIntPipe) page: number,
     @Query('take', ParseIntPipe) take: number,
   ) {
