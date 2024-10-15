@@ -59,7 +59,7 @@ export class UserService {
     return user;
   }
 
-  async readAll(
+  async readMany(
     page: number,
     take: number,
     searchQueryParams: SearchQueryDto,
@@ -72,6 +72,7 @@ export class UserService {
       users = await this.userRepo.find({
         skip,
         take,
+        where: searchQueryParams,
         relations: {
           membership: { welfare: true },
           spouse: true,
@@ -91,8 +92,9 @@ export class UserService {
   }
 
   async upsert(user: User, payload: UpdateUserDto): Promise<User> {
-    const { userDto, membershipDto, spouseDto, childrenDto, welfareDto } =
-      payload;
+    const { userDto, spouseDto, childrenDto, welfareDto } = payload;
+    const { status, membership_role } = userDto;
+    delete userDto.status, userDto.membership_role;
 
     let membership: Membership,
       welfare: Welfare,
@@ -101,18 +103,17 @@ export class UserService {
 
     Object.assign(user, userDto);
 
-    if (membershipDto) {
+    if (membership_role) {
       if (user.membership) {
         membership = await this.membershipRepo.findOneBy({
           id: user.membership?.id,
         });
       } else {
         membership = new Membership();
-        membership.status = MembershipStatus.INACTIVE;
         membership = await this.membershipRepo.create(membership);
       }
 
-      Object.assign(membership, membershipDto);
+      Object.assign(membership, { status, membership_role });
 
       if (welfareDto) {
         if (welfareDto.id) {
@@ -129,7 +130,6 @@ export class UserService {
         await this.welfareRepo.save(welfare);
       }
       membership.welfare = welfare;
-
       await this.membershipRepo.save(membership);
 
       if (spouseDto) {
@@ -142,14 +142,12 @@ export class UserService {
         }
 
         Object.assign(spouse, spouseDto);
-      } else {
-        spouse = null;
+        await this.spouseRepo.save(spouse);
       }
-      await this.spouseRepo.save(spouse);
 
       if (childrenDto) {
         if (user.children) {
-          children = await this.childRepo.findBy({ parentId: user.id });
+          children = await this.childRepo.findBy({ parent: user });
         } else {
           children = new Array<Child>(childrenDto.length).fill(new Child());
           children = await this.childRepo.create(children);
@@ -158,10 +156,8 @@ export class UserService {
         for (let index = 0; index < childrenDto.length; index++) {
           Object.assign(children[index], childrenDto[index]);
         }
-      } else {
-        children = null;
+        await this.childRepo.save(children);
       }
-      await this.childRepo.save(children);
     }
 
     user.membership = membership;

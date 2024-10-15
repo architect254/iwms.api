@@ -8,8 +8,11 @@ import {
   IsArray,
   IsOptional,
   IsNumber,
+  IsInt,
+  IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { UserRole } from './entities/user.entity';
 
 export class CoreUserDto {
   @IsNotEmpty()
@@ -39,12 +42,15 @@ export class CoreUserDto {
 
   @IsNotEmpty()
   @IsString()
-  role: string;
-}
-export class MembershipDto {
-  @IsNotEmpty()
+  user_role: string;
+
+  @IsOptional()
   @IsString()
   status: string;
+
+  @IsOptional()
+  @IsString()
+  membership_role: string;
 }
 export class SpouseDto {
   @IsOptional()
@@ -124,12 +130,6 @@ export class CreateUserDto {
   @IsOptional()
   @IsObject()
   @ValidateNested()
-  @Type(() => MembershipDto)
-  membershipDto: MembershipDto;
-
-  @IsOptional()
-  @IsObject()
-  @ValidateNested()
   @Type(() => SpouseDto)
   spouseDto: SpouseDto;
 
@@ -146,19 +146,31 @@ export class CreateUserDto {
   welfareDto: WelfareDto;
 }
 export class UpdateUserDto {
-  @IsObject()
+  @Transform(
+    ({ value }) => {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    },
+    { toClassOnly: true },
+  )
   @ValidateNested()
   @Type(() => CoreUserDto)
   userDto: CoreUserDto;
 
   @IsOptional()
-  @IsObject()
-  @ValidateNested()
-  @Type(() => MembershipDto)
-  membershipDto: MembershipDto;
-
-  @IsOptional()
-  @IsObject()
+  @Transform(
+    ({ value }) => {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    },
+    { toClassOnly: true },
+  )
   @ValidateNested()
   @Type(() => SpouseDto)
   spouseDto: SpouseDto;
@@ -170,7 +182,16 @@ export class UpdateUserDto {
   childrenDto: ChildDto[];
 
   @IsOptional()
-  @IsObject()
+  @Transform(
+    ({ value }) => {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    },
+    { toClassOnly: true },
+  )
   @ValidateNested()
   @Type(() => WelfareDto)
   welfareDto: WelfareDto;
@@ -178,7 +199,7 @@ export class UpdateUserDto {
 export class SearchQueryDto {
   @IsOptional()
   @IsString()
-  first_name: string;
+  first_name?: string;
 
   @IsOptional()
   @IsString()
@@ -190,7 +211,6 @@ export class SearchQueryDto {
 
   @IsOptional()
   @IsDate()
-  @Transform((birth_date) => new Date(birth_date.value))
   birth_date: Date;
 
   @IsOptional()
@@ -202,8 +222,8 @@ export class SearchQueryDto {
   email: string;
 
   @IsOptional()
-  @IsString()
-  role: string;
+  @IsEnum(UserRole)
+  role: UserRole;
 
   @IsOptional()
   @IsString()

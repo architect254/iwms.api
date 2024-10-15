@@ -14,5 +14,4 @@ export const typeOrmConfig: TypeOrmModuleOptions = {
   synchronize: process.env.TYPEORM_SYNC || DB_CONFIG.synchronize,
   entities: [__dirname + '../../../**/*.entity.{ts,js}'],
   logging: 'all',
-  logger: 'advanced-console',
 };

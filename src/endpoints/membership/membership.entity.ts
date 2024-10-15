@@ -13,7 +13,13 @@ import { User } from '../user/entities/user.entity';
 
 export enum MembershipStatus {
   ACTIVE = 'Active',
-  INACTIVE = 'Inactive',
+  INACTIVE = 'InActive',
+}
+export enum MembershipRole {
+  WELFARE_MANAGER = 'Welfare Manager',
+  WELFARE_ACCOUNTANT = 'Welfare Accountant',
+  WELFARE_SECRETARY = 'Welfare Secretary',
+  WELFARE_MEMBER = 'Welfare Member',
 }
 
 @Entity('memberships')
@@ -24,9 +30,16 @@ export class Membership {
   @Column({
     type: 'enum',
     enum: MembershipStatus,
-    default: MembershipStatus.INACTIVE,
+    default: MembershipStatus[MembershipStatus.INACTIVE],
   })
   status: MembershipStatus;
+
+  @Column({
+    type: 'enum',
+    enum: MembershipRole,
+    default: MembershipRole[MembershipRole.WELFARE_MEMBER],
+  })
+  membership_role: MembershipRole;
 
   @OneToOne(() => User, (member) => member.membership)
   member: User;
