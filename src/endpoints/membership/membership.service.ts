@@ -33,7 +33,7 @@ export class MembershipService {
 
     membership = await this.membershipRepo.findOne({
       where: { id },
-      relations: { welfare: true },
+      relations: { welfare: true, member: true },
     });
 
     if (!membership || !Object.keys(membership).length) {
@@ -53,7 +53,7 @@ export class MembershipService {
       memberships = await this.membershipRepo.find({
         skip,
         take,
-        relations: { welfare: true },
+        relations: { welfare: true, member: true },
       });
     } catch (error) {
       memberships = [];

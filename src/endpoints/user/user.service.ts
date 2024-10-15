@@ -114,7 +114,7 @@ export class UserService {
       }
 
       Object.assign(membership, { status, membership_role });
-
+      membership.member = user;
       if (welfareDto) {
         if (welfareDto.id) {
           welfare = await this.welfareRepo.findOneBy({

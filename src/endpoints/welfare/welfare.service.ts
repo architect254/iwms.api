@@ -33,11 +33,19 @@ export class WelfareService {
   async read(id): Promise<Welfare> {
     let welfare = null;
 
-    welfare = await this.welfareRepo.findOne({
-      where: { id },
-      relations: { memberships: true },
-    });
-
+    try {
+      welfare = await this.welfareRepo.findOne({
+        where: { id },
+        relations: {
+          memberships: {
+            member: true,
+          },
+        },
+      });
+    } catch (error) {
+      welfare = null;
+    }
+    
     if (!welfare || !Object.keys(welfare).length) {
       const errorMessage = `Welfare Group not found`;
       throw new NotFoundException(errorMessage);
