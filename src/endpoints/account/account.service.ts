@@ -114,6 +114,7 @@ export class AccountService {
       }
 
       Object.assign(membership, memberDto);
+      
       if (welfareDto) {
         if (membership.welfare.id) {
           welfare = await this.welfareRepo.findOneBy({
@@ -123,9 +124,8 @@ export class AccountService {
           welfare = new Welfare();
           welfare.members = [];
           welfare = await this.welfareRepo.create(welfare);
-
-          Object.assign(welfare, welfareDto);
         }
+        Object.assign(welfare, welfareDto);
       }
 
       if (spouseDto) {
