@@ -12,9 +12,10 @@ import {
   IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { UserRole } from './entities/user.entity';
+import { AccountStatus, AccountType } from './entities/account.entity';
+import { MemberRole, MemberStatus } from '../member/member.entity';
 
-export class CoreUserDto {
+export class CoreAccountDto {
   @IsNotEmpty()
   @IsString()
   first_name: string;
@@ -41,16 +42,14 @@ export class CoreUserDto {
   email: string;
 
   @IsNotEmpty()
-  @IsString()
-  user_role: string;
-
-  @IsOptional()
+  // @IsEnum(AccountStatus)
   @IsString()
   status: string;
 
   @IsOptional()
+  // @IsEnum(AccountType)
   @IsString()
-  membership_role: string;
+  type: string;
 }
 export class SpouseDto {
   @IsOptional()
@@ -100,11 +99,18 @@ export class ChildDto {
   @Transform((birth_date) => new Date(birth_date.value))
   birth_date: Date;
 }
-export class WelfareDto {
+export class MemberDto {
   @IsOptional()
-  @IsNumber()
-  id: number;
+  // @IsEnum(MemberRole)
+  @IsString()
+  role: string;
 
+  @IsOptional()
+  // @IsEnum(MemberStatus)
+  @IsString()
+  status: string;
+}
+export class WelfareDto {
   @IsOptional()
   @IsString()
   name: string;
@@ -121,11 +127,11 @@ export class WelfareDto {
   @IsEmail()
   logo_image: string;
 }
-export class CreateUserDto {
+export class CreateAccountDto {
   @IsObject()
   @ValidateNested()
-  @Type(() => CoreUserDto)
-  userDto: CoreUserDto;
+  @Type(() => CoreAccountDto)
+  accountDto: CoreAccountDto;
 
   @IsOptional()
   @IsObject()
@@ -138,6 +144,12 @@ export class CreateUserDto {
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
   childrenDto: ChildDto[];
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => MemberDto)
+  memberDto: MemberDto;
 
   @IsOptional()
   @IsObject()
@@ -145,7 +157,7 @@ export class CreateUserDto {
   @Type(() => WelfareDto)
   welfareDto: WelfareDto;
 }
-export class UpdateUserDto {
+export class UpdateAccountDto {
   @Transform(
     ({ value }) => {
       try {
@@ -157,8 +169,8 @@ export class UpdateUserDto {
     { toClassOnly: true },
   )
   @ValidateNested()
-  @Type(() => CoreUserDto)
-  userDto: CoreUserDto;
+  @Type(() => CoreAccountDto)
+  accountDto: CoreAccountDto;
 
   @IsOptional()
   @Transform(
@@ -180,6 +192,21 @@ export class UpdateUserDto {
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
   childrenDto: ChildDto[];
+
+  @IsOptional()
+  @Transform(
+    ({ value }) => {
+      try {
+        return JSON.parse(value);
+      } catch (e) {
+        return value;
+      }
+    },
+    { toClassOnly: true },
+  )
+  @ValidateNested()
+  @Type(() => MemberDto)
+  memberDto: MemberDto;
 
   @IsOptional()
   @Transform(
@@ -221,13 +248,25 @@ export class SearchQueryDto {
   @IsEmail()
   email: string;
 
-  @IsOptional()
-  @IsEnum(UserRole)
-  role: UserRole;
+  // @IsOptional()
+  // // @IsEnum(AccountStatus)
+  // @IsString()
+  // status: string;
 
-  @IsOptional()
-  @IsString()
-  status: string;
+  // @IsOptional()
+  // // @IsEnum(AccountType)
+  // @IsString()
+  // type: string;
+
+  // @IsOptional()
+  // // @IsEnum(MemberRole)
+  // @IsString()
+  // role: string;
+
+  // @IsOptional()
+  // // @IsEnum(MemberStatus)
+  // @IsString()
+  // m_status: string;
 
   @IsOptional()
   @IsNumber()

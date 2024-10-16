@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Membership } from '../membership/membership.entity';
+import { Member } from '../member/member.entity';
 
 @Entity('welfares')
 export class Welfare {
@@ -28,8 +28,8 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToMany(() => Membership, (memberships) => memberships.welfare)
-  memberships: Membership[];
+  @OneToMany(() => Member, (members) => members.welfare)
+  members: Member[];
 
   @CreateDateColumn()
   create_date?: Date;

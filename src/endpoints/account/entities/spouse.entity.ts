@@ -7,7 +7,7 @@ import {
   JoinColumn,
   OneToOne,
 } from 'typeorm';
-import { User } from './user.entity';
+import { Account } from './account.entity';
 
 @Entity('spouses')
 export class Spouse {
@@ -38,7 +38,7 @@ export class Spouse {
   @Column({ unique: true })
   email: string;
 
-  @OneToOne(() => User, (user) => user.spouse)
+  @OneToOne(() => Account, (account) => account.spouse)
   spouse: Spouse;
 
   constructor() {}

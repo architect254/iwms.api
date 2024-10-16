@@ -36,11 +36,11 @@ export class LoggingInterceptor implements NestInterceptor {
       }
     };
 
-    const logSignedUser = (user) => {
-      if (!user || !Object.keys(user).length) {
+    const logSignedAccount = (account) => {
+      if (!account || !Object.keys(account).length) {
         return `NO_SIGNED_USER`;
       }
-      return user.id;
+      return account.id;
     };
 
     const logQueryParams = (query) => {
@@ -72,8 +72,8 @@ export class LoggingInterceptor implements NestInterceptor {
     return next.handle().pipe(
       tap(() => {
         Logger.log(
-          `${logSignedUser(
-            request.user,
+          `${logSignedAccount(
+            request.account,
           )} ${method} -> ${url} { ${logBody(body, url)} } ( ${logRouteParams(
             request.params,
           )} | ${logQueryParams(request.query)} ) ${Date.now() - now}ms`,

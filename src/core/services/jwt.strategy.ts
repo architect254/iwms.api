@@ -6,9 +6,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
-import { JwtPayload } from '../../core/models/jwt.payload';
+import { JwtPayload } from '../../endpoints/auth/auth.service';
 
-import { User } from '../../endpoints/user/entities/user.entity';
+import { Account } from '../../endpoints/account/entities/account.entity';
 
 import * as config from 'config';
 
@@ -17,8 +17,8 @@ const JWT_CONFIG = config.get('db');
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    @InjectRepository(Account)
+    private userRepo: Repository<Account>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -26,12 +26,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(jwtPayload: JwtPayload): Promise<User> {
-    const { email } = jwtPayload.user;
+  async validate(jwtPayload: JwtPayload): Promise<Account> {
+    const { email } = jwtPayload.account;
     const DB_USER = await this.userRepo.findOne({ where: { email } });
 
     if (!DB_USER) {
-      throw new NotFoundException('user not found');
+      throw new NotFoundException('account not found');
     }
 
     return DB_USER;

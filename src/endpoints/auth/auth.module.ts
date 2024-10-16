@@ -5,8 +5,8 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { JwtStrategy } from '../../core/services/jwt.strategy';
 
-import { UserModule } from '../user/user.module';
-import { User } from '../user/entities/user.entity';
+import { AccountModule } from '../account/account.module';
+import { Account } from '../account/entities/account.entity';
 
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -24,10 +24,10 @@ const JWT_CONFIG = config.get('jwt');
         expiresIn: JWT_CONFIG.expiresIn,
       },
     }),
-    UserModule,
+    AccountModule,
   ],
   providers: [JwtStrategy, AuthService],
   controllers: [AuthController],
-  exports: [AuthService, UserModule, JwtModule, PassportModule],
+  exports: [AuthService, AccountModule, JwtModule, PassportModule],
 })
 export class AuthModule {}

@@ -13,15 +13,19 @@ import { Exclude } from 'class-transformer';
 
 import { Child } from './child.entity';
 import { Spouse } from './spouse.entity';
-import { Membership } from 'src/endpoints/membership/membership.entity';
+import { Member } from 'src/endpoints/member/member.entity';
 
-export enum UserRole {
-  SITE_ADMIN = `Site Admin`,
-  CLIENT = 'Client',
+export enum AccountStatus {
+  Active = 'Active',
+  InActive = 'InActive',
+}
+export enum AccountType {
+  Admin = `Admin`,
+  Client = 'Client',
 }
 
-@Entity('users')
-export class User {
+@Entity('accounts')
+export class Account {
   @PrimaryGeneratedColumn()
   id?: number;
 
@@ -51,18 +55,25 @@ export class User {
 
   @Column({
     type: 'enum',
-    enum: UserRole,
-    default: UserRole[UserRole.CLIENT],
+    enum: AccountStatus,
+    default: AccountStatus[AccountStatus.InActive],
+  })
+  status: AccountStatus;
+
+  @Column({
+    type: 'enum',
+    enum: AccountType,
+    default: AccountType[AccountType.Client],
     nullable: false,
   })
-  user_role: UserRole;
+  type: AccountType;
 
   @Column({ nullable: true })
   profile_image?: string;
 
-  @OneToOne(() => Membership)
+  @OneToOne(() => Member)
   @JoinColumn()
-  membership: Membership;
+  membership: Member;
 
   @OneToOne(() => Spouse, (spouse) => spouse.spouse)
   @JoinColumn()

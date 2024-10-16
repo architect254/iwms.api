@@ -1,9 +1,8 @@
-import { Controller, Post, Body, ConflictException } from '@nestjs/common';
+import { Controller, Post, Body } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { FileInterceptor } from '@nestjs/platform-express';
 
-import { JwtPayload } from '../../core/models/jwt.payload';
-import { User } from '../user/entities/user.entity';
+import { JwtPayload } from './auth.service';
+import { Account } from '../account/entities/account.entity';
 import { AuthService } from './auth.service';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
@@ -19,7 +18,7 @@ export class AuthController {
   async signUp(
     @Body()
     payload: SignUpCredentialsDto,
-  ): Promise<User> {
+  ): Promise<Account> {
     return this.authService.signUp(payload);
   }
 
@@ -28,9 +27,9 @@ export class AuthController {
     @Body()
     payload: SignInCredentialsDto,
   ): Promise<{ token: string }> {
-    const user = await this.authService.signIn(payload);
+    const account = await this.authService.signIn(payload);
 
-    const jwtPayload: JwtPayload = { user };
+    const jwtPayload: JwtPayload = { account };
     const token = await this.jwtService.sign(jwtPayload);
 
     return { token };

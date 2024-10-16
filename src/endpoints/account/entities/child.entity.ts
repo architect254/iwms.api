@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { User } from './user.entity';
+import { Account } from './account.entity';
 
 @Entity('children')
 export class Child {
@@ -30,7 +30,7 @@ export class Child {
   @Column()
   birth_date: Date;
 
-  @ManyToOne(() => User, (parent) => parent.children)
-  parent: User;
+  @ManyToOne(() => Account, (parent) => parent.children)
+  parent: Account;
   constructor() {}
 }

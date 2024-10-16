@@ -7,7 +7,7 @@ import {
   Column,
 } from 'typeorm';
 
-import { User } from '../../endpoints/user/entities/user.entity';
+import { Account } from '../../endpoints/account/entities/account.entity';
 
 export abstract class AbstractEntity {
   @PrimaryGeneratedColumn()
@@ -19,16 +19,16 @@ export abstract class AbstractEntity {
   @UpdateDateColumn()
   update_date?: Date;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => Account, { nullable: true })
   @JoinColumn()
-  creator: User;
+  creator: Account;
 
   @Column({ nullable: true })
   creator_id: string;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => Account, { nullable: true })
   @JoinColumn()
-  updator: User;
+  updator: Account;
 
   @Column({ nullable: true })
   updator_id: string;

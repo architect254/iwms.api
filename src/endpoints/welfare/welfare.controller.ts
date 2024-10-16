@@ -14,8 +14,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { WelfareService } from './welfare.service';
 import { WelfareDto } from './welfare.dto';
 
-import { GetUser } from '../user/get-user.decorator';
-import { User } from '../user/entities/user.entity';
+import { GetAccount } from '../account/get-account.decorator';
+import { Account } from '../account/entities/account.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('welfares')
@@ -23,7 +23,7 @@ export class WelfareController {
   constructor(private welfareService: WelfareService) {}
 
   @Post()
-  async createWelfare(@Body() payload: WelfareDto, @GetUser() initiator: User) {
+  async createWelfare(@Body() payload: WelfareDto, @GetAccount() initiator: Account) {
     return await this.welfareService.create(payload);
   }
 
@@ -44,7 +44,7 @@ export class WelfareController {
   async updateWelfare(
     @Param('id') id,
     @Body() payload: WelfareDto,
-    @GetUser() initiator: User,
+    @GetAccount() initiator: Account,
   ) {
     return await this.welfareService.update(id, payload);
   }

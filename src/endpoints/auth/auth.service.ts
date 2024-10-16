@@ -10,22 +10,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import { User, UserRole } from '../user/entities/user.entity';
+import { Account, AccountType } from '../account/entities/account.entity';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
-import { UserService } from '../user/user.service';
+import { AccountService } from '../account/account.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-    private userService: UserService,
+    @InjectRepository(Account)
+    private accountRepo: Repository<Account>,
   ) {}
 
-  async signUp(credentials: SignUpCredentialsDto): Promise<User> {
+  async signUp(credentials: SignUpCredentialsDto): Promise<Account> {
     // const persisted_users = await this.userService.readAll(1, 1);
     // if (persisted_users.length) {
     //   throw new UnauthorizedException(
@@ -34,20 +33,20 @@ export class AuthService {
     // }
     const { password } = credentials;
 
-    const user = new User();
-    Object.assign(user, credentials);
+    const account = new Account();
+    Object.assign(account, credentials);
 
-    user.user_role = UserRole.SITE_ADMIN;
+    account.type = AccountType.Admin;
 
-    user.salt = await genSalt();
-    user.password = await this.hashPassword(password, user.salt);
+    account.salt = await genSalt();
+    account.password = await this.hashPassword(password, account.salt);
 
     try {
-      return await this.userRepo.save(user);
+      return await this.accountRepo.save(account);
     } catch (error) {
       if (error.errno === 1062) {
         throw new ConflictException(
-          'User with same credentials already exists',
+          'Account with same credentials already exists',
         );
       } else {
         throw new InternalServerErrorException(error.message);
@@ -57,23 +56,28 @@ export class AuthService {
 
   async signIn(credentials: SignInCredentialsDto) {
     const { email, password } = credentials;
-    const user = await this.userRepo.findOne({ where: { email } });
+    const account = await this.accountRepo.findOne({ where: { email } });
 
-    if (!user) {
-      throw new NotFoundException('This user does not exist in our database');
+    if (!account) {
+      throw new NotFoundException(
+        'This account does not exist in our database',
+      );
     }
-    const isValid = await compare(password, user?.password);
+    const isValid = await compare(password, account?.password);
 
     if (!isValid) {
-      throw new ConflictException('Invalid user credentials');
+      throw new ConflictException('Invalid account credentials');
     }
 
-    delete user.password && delete user.salt;
+    delete account.password && delete account.salt;
 
-    return user;
+    return account;
   }
 
   async hashPassword(input: string, salt: string): Promise<string> {
     return hash(input, salt);
   }
+}
+export interface JwtPayload {
+  account: Account;
 }

@@ -12,22 +12,22 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { MembershipService } from './membership.service';
-import { MembershipDto } from './membership.dto';
-import { Membership } from './membership.entity';
+import { MemberService } from './member.service';
+import { MemberDto } from './member.dto';
+import { Member } from './member.entity';
 
-import { GetUser } from '../user/get-user.decorator';
-import { User } from '../user/entities/user.entity';
+import { GetAccount } from '../account/get-account.decorator';
+import { Account } from '../account/entities/account.entity';
 
 // @UseGuards(AuthGuard('jwt'))
-@Controller('memberships')
-export class MembershipController {
-  constructor(private membershipService: MembershipService) {}
+@Controller('members')
+export class MemberController {
+  constructor(private membershipService: MemberService) {}
 
   @Post()
   async createMembership(
-    @Body() payload: MembershipDto,
-    @GetUser() initiator: User,
+    @Body() payload: MemberDto,
+    @GetAccount() initiator: Account,
   ) {
     return await this.membershipService.create(payload);
   }
@@ -48,8 +48,8 @@ export class MembershipController {
   @Put('/:id')
   async updateMembership(
     @Param('id') id: number,
-    @Body() payload: MembershipDto,
-    @GetUser() initiator: User,
+    @Body() payload: MemberDto,
+    @GetAccount() initiator: Account,
   ) {
     return await this.membershipService.update(id, payload);
   }
