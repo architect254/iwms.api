@@ -10,7 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import { Account, AccountType } from '../account/entities/account.entity';
+import { Account, Class } from '../account/entities/account.entity';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
@@ -36,7 +36,7 @@ export class AuthService {
     const account = new Account();
     Object.assign(account, credentials);
 
-    account.type = AccountType.Admin;
+    account.class = Class.Admin;
 
     account.salt = await genSalt();
     account.password = await this.hashPassword(password, account.salt);

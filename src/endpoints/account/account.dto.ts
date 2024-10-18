@@ -8,21 +8,17 @@ import {
   IsArray,
   IsOptional,
   IsNumber,
-  IsInt,
-  IsEnum,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
-import { AccountStatus, AccountType } from './entities/account.entity';
-import { MemberRole, MemberStatus } from '../member/member.entity';
 
 export class CoreAccountDto {
   @IsNotEmpty()
   @IsString()
-  first_name: string;
+  name: string;
 
   @IsNotEmpty()
   @IsString()
-  last_name: string;
+  gender: string;
 
   @IsNotEmpty()
   @IsString()
@@ -44,25 +40,21 @@ export class CoreAccountDto {
   @IsNotEmpty()
   // @IsEnum(AccountStatus)
   @IsString()
-  status: string;
+  state: string;
 
   @IsOptional()
   // @IsEnum(AccountType)
   @IsString()
-  type: string;
+  class: string;
 }
 export class SpouseDto {
-  @IsOptional()
-  @IsNumber()
-  spouseId: number;
+  @IsNotEmpty()
+  @IsString()
+  name: string;
 
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  gender: string;
 
   @IsNotEmpty()
   @IsString()
@@ -82,17 +74,13 @@ export class SpouseDto {
   email: string;
 }
 export class ChildDto {
-  @IsOptional()
-  @IsNumber()
-  childId: number;
+  @IsNotEmpty()
+  @IsString()
+  name: string;
 
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  gender: string;
 
   @IsNotEmpty()
   @IsDate()
@@ -226,11 +214,7 @@ export class UpdateAccountDto {
 export class SearchQueryDto {
   @IsOptional()
   @IsString()
-  first_name?: string;
-
-  @IsOptional()
-  @IsString()
-  last_name: string;
+  name: string;
 
   @IsOptional()
   @IsString()

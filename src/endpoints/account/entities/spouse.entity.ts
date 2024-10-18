@@ -4,10 +4,14 @@ import {
   CreateDateColumn,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
-  JoinColumn,
   OneToOne,
 } from 'typeorm';
 import { Account } from './account.entity';
+
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
+}
 
 @Entity('spouses')
 export class Spouse {
@@ -21,10 +25,14 @@ export class Spouse {
   update_date?: Date;
 
   @Column()
-  first_name: string;
+  name: string;
 
-  @Column()
-  last_name: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    default: Gender[Gender.Male],
+  })
+  gender: Gender;
 
   @Column({ unique: true })
   id_number: string;

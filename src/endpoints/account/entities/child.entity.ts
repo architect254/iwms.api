@@ -1,7 +1,6 @@
 import {
   Entity,
   Column,
-  JoinColumn,
   ManyToOne,
   CreateDateColumn,
   PrimaryGeneratedColumn,
@@ -9,6 +8,11 @@ import {
 } from 'typeorm';
 
 import { Account } from './account.entity';
+
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
+}
 
 @Entity('children')
 export class Child {
@@ -22,10 +26,14 @@ export class Child {
   update_date?: Date;
 
   @Column()
-  first_name: string;
+  name: string;
 
-  @Column()
-  last_name: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    default: Gender[Gender.Male],
+  })
+  gender: Gender;
 
   @Column()
   birth_date: Date;

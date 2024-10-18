@@ -15,13 +15,19 @@ import { Child } from './child.entity';
 import { Spouse } from './spouse.entity';
 import { Member } from 'src/endpoints/member/member.entity';
 
-export enum AccountStatus {
+export enum State {
   Active = 'Active',
   InActive = 'InActive',
 }
-export enum AccountType {
-  Admin = `Admin`,
+
+export enum Class {
+  Admin = 'Admin',
   Client = 'Client',
+}
+
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
 }
 
 @Entity('accounts')
@@ -36,10 +42,14 @@ export class Account {
   update_date?: Date;
 
   @Column({ nullable: false })
-  first_name: string;
+  name: string;
 
-  @Column({ nullable: false })
-  last_name: string;
+  @Column({
+    type: 'enum',
+    enum: Gender,
+    default: Gender[Gender.Male],
+  })
+  gender: Gender;
 
   @Column({ unique: true })
   id_number: string;
@@ -55,18 +65,18 @@ export class Account {
 
   @Column({
     type: 'enum',
-    enum: AccountStatus,
-    default: AccountStatus[AccountStatus.InActive],
+    enum: State,
+    default: State[State.InActive],
   })
-  status: AccountStatus;
+  state: State;
 
   @Column({
     type: 'enum',
-    enum: AccountType,
-    default: AccountType[AccountType.Client],
+    enum: Class,
+    default: Class[Class.Client],
     nullable: false,
   })
-  type: AccountType;
+  class: Class;
 
   @Column({ nullable: true })
   profile_image?: string;
