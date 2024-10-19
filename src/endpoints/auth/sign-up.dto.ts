@@ -12,11 +12,7 @@ import { SignInCredentialsDto } from './sign-in.dto';
 export class SignUpCredentialsDto extends SignInCredentialsDto {
   @IsNotEmpty()
   @IsString()
-  first_name: string;
-
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  name: string;
 
   @IsNotEmpty()
   @IsString()
