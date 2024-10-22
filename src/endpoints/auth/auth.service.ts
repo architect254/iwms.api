@@ -56,7 +56,10 @@ export class AuthService {
 
   async signIn(credentials: SignInCredentialsDto) {
     const { email, password } = credentials;
-    const account = await this.accountRepo.findOne({ where: { email } });
+    const account = await this.accountRepo.findOne({
+      where: { email },
+      relations: { membership: { welfare: true } },
+    });
 
     if (!account) {
       throw new NotFoundException(

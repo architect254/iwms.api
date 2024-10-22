@@ -103,7 +103,7 @@ export class AccountService {
 
     Object.assign(account, accountDto);
 
-    if (memberDto.role) {
+    if (memberDto) {
       if (account.membership) {
         membership = await this.memberRepo.findOneBy({
           id: account.membership?.id,
@@ -114,11 +114,15 @@ export class AccountService {
       }
 
       Object.assign(membership, memberDto);
-      
+
       if (welfareDto) {
-        if (membership.welfare.id) {
+        if (membership.welfare?.id) {
           welfare = await this.welfareRepo.findOneBy({
-            id: membership.welfare.id,
+            id: membership.welfare?.id,
+          });
+        } else if (welfareDto.id) {
+          welfare = await this.welfareRepo.findOneBy({
+            id: welfareDto.id,
           });
         } else {
           welfare = new Welfare();
@@ -126,6 +130,10 @@ export class AccountService {
           welfare = await this.welfareRepo.create(welfare);
         }
         Object.assign(welfare, welfareDto);
+
+        if (welfare) {
+          await this.welfareRepo.save(welfare);
+        }
       }
 
       if (spouseDto) {
@@ -137,40 +145,36 @@ export class AccountService {
         }
 
         Object.assign(spouse, spouseDto);
+        if (spouse) {
+          spouse.spouse = account;
+          await this.spouseRepo.save(spouse);
+        }
       }
 
       if (childrenDto) {
-        if (account.children) {
-          children = await this.childRepo.findBy({ parent: account });
+        if (account.children.length) {
+          children = account.children;
         } else {
           children = new Array<Child>(childrenDto.length).fill(new Child());
           children = await this.childRepo.create(children);
         }
-
+        console.log('children1', account.children);
         for (let index = 0; index < childrenDto.length; index++) {
           Object.assign(children[index], childrenDto[index]);
         }
         await this.childRepo.save(children);
+      }
+      if (membership) {
+        membership.account = account;
+        membership.welfare = welfare;
+        await this.memberRepo.save(membership);
       }
     }
 
     account.children = children;
     account.salt = await genSalt();
     account.password = await hash('Password@123', account.salt);
-
     await this.accountRepo.save(account);
-    if (spouse) {
-      spouse.spouse = account;
-      await this.spouseRepo.save(spouse);
-    }
-    if (membership) {
-      membership.account = account;
-      await this.memberRepo.save(membership);
-    }
-    if (welfare) {
-      membership.welfare = welfare;
-      await this.welfareRepo.save(welfare);
-    }
 
     delete account.password && delete account.salt;
 

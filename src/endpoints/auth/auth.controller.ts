@@ -29,6 +29,7 @@ export class AuthController {
   ): Promise<{ token: string }> {
     const account = await this.authService.signIn(payload);
 
+    console.log('account user', account);
     const jwtPayload: JwtPayload = { account };
     const token = await this.jwtService.sign(jwtPayload);
 

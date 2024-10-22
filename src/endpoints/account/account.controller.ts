@@ -49,7 +49,6 @@ export class AccountController {
     queryParams: SearchQueryDto,
   ) {
     const { page, take } = paginationRequest;
-    console.log('params', queryParams, paginationRequest);
     return await this.accountService.readMany(page, take, queryParams);
   }
 

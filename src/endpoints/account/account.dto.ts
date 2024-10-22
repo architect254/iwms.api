@@ -100,6 +100,10 @@ export class MemberDto {
 }
 export class WelfareDto {
   @IsOptional()
+  @IsNumber()
+  id: number;
+
+  @IsOptional()
   @IsString()
   name: string;
 

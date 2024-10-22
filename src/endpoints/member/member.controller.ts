@@ -13,11 +13,21 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 
 import { MemberService } from './member.service';
-import { MemberDto } from './member.dto';
+import {
+  CreateMemberDto,
+  MemberDto,
+  SearchQueryDto,
+  UpdateMemberDto,
+} from './member.dto';
 import { Member } from './member.entity';
 
 import { GetAccount } from '../account/get-account.decorator';
 import { Account } from '../account/entities/account.entity';
+import { take } from 'rxjs';
+import {
+  PaginationTransformPipe,
+  PaginationRequestDto,
+} from 'src/core/models/pagination-request.dto';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('members')
@@ -26,10 +36,40 @@ export class MemberController {
 
   @Post()
   async createMembership(
-    @Body() payload: MemberDto,
+    @Body() payload: CreateMemberDto,
     @GetAccount() initiator: Account,
   ) {
     return await this.membershipService.create(payload);
+  }
+
+  @Get()
+  async getMemberships(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query()
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+
+    return await this.membershipService.readAll(page, take, queryParams);
+  }
+
+  @Get('/by-welfare-id/:welfareId')
+  async getMembershipsByWelfare(
+    @Param('welfareId') welfareId: number,
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query()
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    console.log('welfareId', welfareId);
+    return await this.membershipService.readAllByWelfareId(
+      welfareId,
+      page,
+      take,
+      queryParams,
+    );
   }
 
   @Get('/:id')
@@ -37,18 +77,10 @@ export class MemberController {
     return await this.membershipService.read(id);
   }
 
-  @Get()
-  async getMemberships(
-    @Query('page', ParseIntPipe) page: number = 1,
-    @Query('take', ParseIntPipe) take: number = 10,
-  ) {
-    return await this.membershipService.readAll(page, take);
-  }
-
   @Put('/:id')
   async updateMembership(
     @Param('id') id: number,
-    @Body() payload: MemberDto,
+    @Body() payload: UpdateMemberDto,
     @GetAccount() initiator: Account,
   ) {
     return await this.membershipService.update(id, payload);
