@@ -9,12 +9,12 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { Member } from '../member/member.entity';
+import { ClientUserAccount } from '../account/entities/user_account.entity';
 
 @Entity('welfares')
 export class Welfare {
-  @PrimaryGeneratedColumn()
-  id?: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -28,8 +28,8 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToMany(() => Member, (members) => members.welfare)
-  members: Member[];
+  @OneToMany(() => ClientUserAccount, (members) => members.welfare)
+  members: ClientUserAccount[];
 
   @CreateDateColumn()
   create_date?: Date;

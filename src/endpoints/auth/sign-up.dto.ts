@@ -3,24 +3,20 @@ import {
   IsString,
   IsEmail,
   IsDate,
-  IsStrongPassword,
 } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Type } from 'class-transformer';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 
 export class SignUpCredentialsDto extends SignInCredentialsDto {
-  @IsNotEmpty()
   @IsString()
   name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  id_number: string;
+  @IsEmail()
+  email: string;
 
-  @IsNotEmpty()
   @IsDate()
-  @Transform((date) => new Date(date.value))
+  @Type(() => Date)
   birth_date: Date;
 
   @IsNotEmpty()

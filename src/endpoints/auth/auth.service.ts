@@ -10,21 +10,22 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import { Account, Class } from '../account/entities/account.entity';
+import {
+  AccountType,
+  AdminUserAccount,
+} from '../account/entities/user_account.entity';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
-import { AccountService } from '../account/account.service';
-
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(Account)
-    private accountRepo: Repository<Account>,
+    @InjectRepository(AdminUserAccount)
+    private accountRepo: Repository<AdminUserAccount>,
   ) {}
 
-  async signUp(credentials: SignUpCredentialsDto): Promise<Account> {
+  async signUp(credentials: SignUpCredentialsDto): Promise<AdminUserAccount> {
     // const persisted_users = await this.userService.readAll(1, 1);
     // if (persisted_users.length) {
     //   throw new UnauthorizedException(
@@ -33,10 +34,10 @@ export class AuthService {
     // }
     const { password } = credentials;
 
-    const account = new Account();
+    const account = new AdminUserAccount();
     Object.assign(account, credentials);
 
-    account.class = Class.Admin;
+    account.type = AccountType.Admin;
 
     account.salt = await genSalt();
     account.password = await this.hashPassword(password, account.salt);
@@ -46,7 +47,7 @@ export class AuthService {
     } catch (error) {
       if (error.errno === 1062) {
         throw new ConflictException(
-          'Account with same credentials already exists',
+          'User account with same credentials already exists',
         );
       } else {
         throw new InternalServerErrorException(error.message);
@@ -55,21 +56,18 @@ export class AuthService {
   }
 
   async signIn(credentials: SignInCredentialsDto) {
-    const { email, password } = credentials;
-    const account = await this.accountRepo.findOne({
-      where: { email },
-      relations: { membership: { welfare: true } },
+    const { id_number, password } = credentials;
+    const account: AdminUserAccount = await this.accountRepo.findOne({
+      where: { id_number },
     });
 
     if (!account) {
-      throw new NotFoundException(
-        'This account does not exist in our database',
-      );
+      throw new NotFoundException('This user account does not exist');
     }
     const isValid = await compare(password, account?.password);
 
     if (!isValid) {
-      throw new ConflictException('Invalid account credentials');
+      throw new ConflictException('Invalid user account credentials');
     }
 
     delete account.password && delete account.salt;
@@ -82,5 +80,5 @@ export class AuthService {
   }
 }
 export interface JwtPayload {
-  account: Account;
+  account: AdminUserAccount;
 }

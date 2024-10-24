@@ -3,12 +3,14 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  PrimaryColumn,
   ManyToOne,
+  TableInheritance,
+  ChildEntity,
+  PrimaryGeneratedColumn,
   OneToOne,
 } from 'typeorm';
 import { Transaction } from '../transaction/transaction.entity';
-import { Member } from '../member/member.entity';
+import { ClientUserAccount } from '../account/entities/user_account.entity';
 
 export enum ContributionType {
   Membership = 'Membership',
@@ -18,25 +20,28 @@ export enum ContributionType {
   MembershipReActivation = 'Membership Re-Activation',
 }
 
+@Entity('contributions')
+@TableInheritance({
+  column: { type: 'enum', enum: ContributionType, name: 'type' },
+})
 export abstract class Contribution {
-  @PrimaryColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column({
     type: 'enum',
     enum: ContributionType,
-    default: ContributionType[ContributionType.Monthly],
   })
   type: ContributionType;
 
-  @Column(() => Transaction)
+  @OneToOne(() => Transaction, (transaction) => transaction.id)
   transaction: Transaction;
 
-  @ManyToOne(() => Member)
-  from_member: Member;
+  @ManyToOne(() => ClientUserAccount, (from) => from.from)
+  from: ClientUserAccount;
 
-  @OneToOne(() => Member)
-  for_member: Member;
+  @ManyToOne(() => ClientUserAccount, (to) => to.to)
+  to: ClientUserAccount;
 
   @CreateDateColumn()
   create_date?: Date;
@@ -45,107 +50,36 @@ export abstract class Contribution {
   update_date?: Date;
 }
 
-@Entity('membership contributions')
+@ChildEntity(ContributionType.Membership)
 export class MembershipContribution extends Contribution {
-  @Column({
-    type: 'enum',
-    enum: ContributionType,
-    default: ContributionType[ContributionType.Membership],
-  })
-  type: ContributionType;
-
-  @ManyToOne(() => Member, (member) => member.membership_contributions)
-  from_member: Member;
-
-  @ManyToOne(() => Member)
-  for_member: Member;
-
   constructor() {
     super();
   }
 }
 
-@Entity('monthly contributions')
+@ChildEntity(ContributionType.Monthly)
 export class MonthlyContribution extends Contribution {
-  @Column({
-    type: 'enum',
-    enum: ContributionType,
-    default: ContributionType[ContributionType.Monthly],
-  })
-  type: ContributionType;
-
-  @Column({ nullable: false })
-  for_month: Date;
-
-  @ManyToOne(() => Member, (member) => member.monthly_contributions)
-  from_member: Member;
-
-  @ManyToOne(() => Member)
-  for_member: Member;
-
   constructor() {
     super();
   }
 }
 
-@Entity('bereaved member contributions')
+@ChildEntity(ContributionType.BereavedMember)
 export class BereavedMemberContribution extends Contribution {
-  @Column({
-    type: 'enum',
-    enum: ContributionType,
-    default: ContributionType[ContributionType.BereavedMember],
-  })
-  type: ContributionType;
-
-  @ManyToOne(() => Member, (member) => member.bereaved_member_contributions)
-  from_member: Member;
-
-  @ManyToOne(() => Member)
-  for_member: Member;
-
   constructor() {
     super();
   }
 }
 
-@Entity('deceased member contributions')
+@ChildEntity(ContributionType.DeceasedMember)
 export class DeceasedMemberContribution extends Contribution {
-  @Column({
-    type: 'enum',
-    enum: ContributionType,
-    default: ContributionType[ContributionType.DeceasedMember],
-  })
-  type: ContributionType;
-
-  @ManyToOne(() => Member, (member) => member.deceased_member_contributions)
-  from_member: Member;
-
-  @ManyToOne(() => Member)
-  for_member: Member;
-
   constructor() {
     super();
   }
 }
 
-@Entity('membership re-activation contributions')
+@ChildEntity(ContributionType.MembershipReActivation)
 export class MembershipReactivationContribution extends Contribution {
-  @Column({
-    type: 'enum',
-    enum: ContributionType,
-    default: ContributionType[ContributionType.MembershipReActivation xcv ],
-  })
-  type: ContributionType;
-
-  @ManyToOne(
-    () => Member,
-    (member) => member.membership_reactivation_contributions,
-  )
-  from_member: Member;
-
-  @ManyToOne(() => Member)
-  for_member: Member;
-
   constructor() {
     super();
   }

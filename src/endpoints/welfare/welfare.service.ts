@@ -10,8 +10,6 @@ import { Repository } from 'typeorm';
 
 import { Welfare } from './welfare.entity';
 import { WelfareDto } from './welfare.dto';
-import { Account } from 'src/endpoints/account/entities/account.entity';
-import { Member } from '../member/member.entity';
 
 @Injectable()
 export class WelfareService {
@@ -35,15 +33,13 @@ export class WelfareService {
       welfare = await this.welfareRepo.findOne({
         where: { id },
         relations: {
-          members: {
-            account: true,
-          },
+          members: true,
         },
       });
     } catch (error) {
       welfare = null;
     }
-    
+
     if (!welfare || !Object.keys(welfare).length) {
       const errorMessage = `Welfare Group not found`;
       throw new NotFoundException(errorMessage);
@@ -52,7 +48,7 @@ export class WelfareService {
     return welfare;
   }
 
-  async readAll(page: number, take: number): Promise<Welfare[]> {
+  async readMany(page: number, take: number): Promise<Welfare[]> {
     const skip: number = Number(take * (page - 1));
 
     let welfares = [];
@@ -62,9 +58,7 @@ export class WelfareService {
         skip,
         take,
         relations: {
-          members: {
-            account: true,
-          },
+          members: true,
         },
       });
     } catch (error) {

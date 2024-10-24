@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   OneToOne,
 } from 'typeorm';
-import { Account } from './account.entity';
+import {  ClientUserAccount } from './user_account.entity';
 
 export enum Gender {
   Male = 'Male',
@@ -15,14 +15,8 @@ export enum Gender {
 
 @Entity('spouses')
 export class Spouse {
-  @PrimaryGeneratedColumn()
-  id?: number;
-
-  @CreateDateColumn()
-  create_date?: Date;
-
-  @UpdateDateColumn()
-  update_date?: Date;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -46,8 +40,14 @@ export class Spouse {
   @Column({ unique: true })
   email: string;
 
-  @OneToOne(() => Account, (account) => account.spouse)
-  spouse: Spouse;
+  @OneToOne(() => ClientUserAccount, (account) => account.spouse)
+  spouse: ClientUserAccount;
+
+  @CreateDateColumn()
+  create_date?: Date;
+
+  @UpdateDateColumn()
+  update_date?: Date;
 
   constructor() {}
 }

@@ -1,9 +1,9 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { UserAccount } from './entities/user_account.entity';
 
-import { Account } from './entities/account.entity';
 
-export const GetAccount = createParamDecorator(
-  (key: string, ctx: ExecutionContext): Account => {
+export const GetUserAccount = createParamDecorator(
+  (key: string, ctx: ExecutionContext): UserAccount => {
     const req = ctx.switchToHttp().getRequest();
     const account = req.account;
     return key ? account[key] : account;

@@ -4,38 +4,47 @@ import {
   IsCurrency,
   IsOptional,
   IsDate,
+  IsEnum,
+  IsNotEmptyObject,
+  ValidateNested,
 } from 'class-validator';
+import { ContributionType } from './contribution.entity';
+import { Type } from 'class-transformer';
 
 export class TransactionDto {
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
+  id: string;
+  
+  @IsString()
   for: string;
 
   @IsCurrency({ allow_decimal: false, allow_negatives: false })
-  @IsNotEmpty()
   amount: number;
 }
 export class ContributionDto {
-  @IsString()
-  @IsNotEmpty()
-  type: string;
+  @IsEnum(() => ContributionType)
+  type: ContributionType;
 
   @IsString()
-  @IsNotEmpty()
-  from_member_id: string;
+  from: string;
 
   @IsString()
-  @IsNotEmpty()
-  for_member_id: string;
+  to: string;
+
+  @IsNotEmptyObject({}, { message: 'transaction should not be empty' })
+  @ValidateNested()
+  transactionDto: TransactionDto;
+}
+
+export class MonthlyContributionDto extends ContributionDto {
+  @IsDate()
+  @Type(() => Date)
+  for_month: Date;
 }
 
 export class MembershipContributionDto extends ContributionDto {}
 
-export class MonthlyContributionDto extends ContributionDto {
-  @IsNotEmpty()
-  @IsDate()
-  for_month: Date;
-}
 export class BereavedMemberContributionDto extends ContributionDto {}
 
 export class DeceasedMemberContributionDto extends ContributionDto {}
@@ -43,19 +52,5 @@ export class DeceasedMemberContributionDto extends ContributionDto {}
 export class MembershipReactivationContributionDto extends ContributionDto {}
 
 export class SearchQueryDto {
-  @IsString()
-  @IsOptional()
-  for: string;
 
-  @IsCurrency({ allow_decimal: false, allow_negatives: false })
-  @IsOptional()
-  amount: number;
-
-  @IsString()
-  @IsOptional()
-  from_account: string;
-
-  @IsString()
-  @IsOptional()
-  to_account: string;
 }

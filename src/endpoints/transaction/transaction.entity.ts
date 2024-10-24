@@ -4,11 +4,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   PrimaryColumn,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
 
 export enum TransactionType {
-  Internal = 'Internal',
-  External = 'External',
+  Incoming = 'Incoming',
+  Outgoing = 'Outgoing',
 }
 export enum TransactionStatus {
   Committed = 'Committed',
@@ -16,8 +17,8 @@ export enum TransactionStatus {
 }
 @Entity('transactions')
 export class Transaction {
-  @PrimaryColumn()
-  id?: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   for: string;
@@ -34,7 +35,7 @@ export class Transaction {
   @Column({
     type: 'enum',
     enum: TransactionType,
-    default: TransactionType[TransactionType.Internal],
+    default: TransactionType[TransactionType.Incoming],
   })
   type: TransactionType;
 

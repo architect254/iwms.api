@@ -1,106 +1,171 @@
 import {
   Injectable,
-  ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-import { SearchQueryDto, TransactionDto } from './contribution.dto';
-import { Contribution } from './contribution.entity';
+import {
+  BereavedMemberContributionDto,
+  ContributionDto,
+  DeceasedMemberContributionDto,
+  MembershipContributionDto,
+  MembershipReactivationContributionDto,
+  MonthlyContributionDto,
+  SearchQueryDto,
+} from './contribution.dto';
+import {
+  BereavedMemberContribution,
+  Contribution,
+  ContributionType,
+  DeceasedMemberContribution,
+  MembershipContribution,
+  MembershipReactivationContribution,
+  MonthlyContribution,
+} from './contribution.entity';
+import {
+  Transaction,
+  TransactionStatus,
+} from '../transaction/transaction.entity';
+import { ClientUserAccount } from '../account/entities/user_account.entity';
 
 @Injectable()
 export class ContributionService {
   constructor(
     @InjectRepository(Contribution)
     private contributionRepo: Repository<Contribution>,
+    @InjectRepository(ClientUserAccount)
+    private memberRepo: Repository<ClientUserAccount>,
+    @InjectRepository(Transaction)
+    private transactionRepo: Repository<Transaction>,
   ) {}
 
-  async create(payload: TransactionDto): Promise<Contribution> {
-    const transaction = await this.transactionRepo.create(new Transaction());
+  async create(payload: ContributionDto): Promise<Contribution> {
+    let contribution: Contribution;
 
-    return this.upsert(transaction, payload);
+    switch (payload.type) {
+      case ContributionType.Membership:
+        contribution = new MembershipContribution();
+        payload = payload as MembershipContributionDto;
+        break;
+
+      case ContributionType.Monthly:
+        contribution = new MonthlyContribution();
+        payload = payload as MonthlyContributionDto;
+        break;
+
+      case ContributionType.BereavedMember:
+        contribution = new BereavedMemberContribution();
+        payload = payload as BereavedMemberContributionDto;
+        break;
+
+      case ContributionType.DeceasedMember:
+        contribution = new DeceasedMemberContribution();
+        payload = payload as DeceasedMemberContributionDto;
+        break;
+
+      case ContributionType.MembershipReActivation:
+        contribution = new MembershipReactivationContribution();
+        payload = payload as MembershipReactivationContributionDto;
+        break;
+    }
+
+    contribution = await this.contributionRepo.create(contribution);
+
+    return this.upsert(contribution, payload);
   }
 
-  async read(id): Promise<Transaction> {
-    let transaction = null;
+  async read(id): Promise<Contribution> {
+    let contribution;
 
     try {
-      transaction = await this.transactionRepo.findOne({
+      contribution = await this.contributionRepo.findOne({
         where: { id },
       });
     } catch (error) {
-      transaction = null;
+      contribution = null;
     }
 
-    if (!transaction || !Object.keys(transaction).length) {
-      const errorMessage = `Transaction not found`;
+    if (!contribution || !Object.keys(contribution).length) {
+      const errorMessage = `Contribution not found`;
       throw new NotFoundException(errorMessage);
     }
 
-    return transaction;
+    return contribution;
   }
 
-  async readAll(
+  async readMany(
     page: number,
     take: number,
     searchQueryParams: SearchQueryDto,
-  ): Promise<Transaction[]> {
+  ): Promise<Contribution[]> {
     const skip: number = Number(take * (page - 1));
 
-    let transactions = [];
+    let contributions = [];
 
     try {
-      transactions = await this.transactionRepo.find({
+      contributions = await this.contributionRepo.find({
         skip,
         take,
         where: searchQueryParams,
       });
     } catch (error) {
-      transactions = [];
+      contributions = [];
     }
 
-    return transactions;
+    return contributions;
   }
 
-  async update(id, payload: TransactionDto): Promise<Transaction> {
-    const transaction = await this.read(id);
-    return this.upsert(transaction, payload);
+  async update(id, payload: ContributionDto): Promise<Contribution> {
+    const contribution = await this.read(id);
+    return this.upsert(contribution, payload);
   }
 
   async upsert(
-    transaction: Transaction,
-    payload: TransactionDto,
-  ): Promise<Transaction> {
-    Object.assign(transaction, payload);
+    contribution: Contribution,
+    payload: ContributionDto,
+  ): Promise<Contribution> {
+    const { transactionDto, ...contributionFields } = payload;
 
+    Object.assign(contribution, contributionFields);
+
+    if (contributionFields.from) {
+      contribution.from = await this.memberRepo.findOneBy({
+        id: contributionFields.from,
+      });
+    }
+    if (contributionFields.to) {
+      contribution.to = await this.memberRepo.findOneBy({
+        id: contributionFields.to,
+      });
+    }
+
+    let transaction;
+    if (transactionDto.id) {
+      transaction = this.transactionRepo.findOneBy({ id: transactionDto.id });
+    } else {
+      transaction = this.transactionRepo.create(new Transaction());
+    }
+
+    Object.assign(transaction, transactionDto);
+
+    transaction.from_account = contribution.from.id_number;
+    transaction.to_account = contribution.to.id_number;
     transaction.status = TransactionStatus.Committed;
 
-    await this.transactionRepo.save(transaction);
+    contribution.transaction = await this.transactionRepo.save(transaction);
 
-    return transaction;
+    return await this.contributionRepo.save(contribution);
   }
 
   async drop(id): Promise<void> {
-    const transaction: Transaction = await this.read(id);
-    const result = await this.transactionRepo.softRemove(transaction);
+    const contribution: Contribution = await this.read(id);
+    const result = await this.contributionRepo.softRemove(contribution);
 
     if (!result) {
       const errorMessage = `Operation Failed:DELETE`;
       throw new InternalServerErrorException(errorMessage);
-    }
-  }
-
-  async save(transaction: Transaction): Promise<Transaction> {
-    try {
-      return await this.transactionRepo.save(transaction);
-    } catch (error) {
-      if (error.errno === 1062) {
-        throw new ConflictException('Transaction Exists');
-      } else {
-        throw new InternalServerErrorException(error.message);
-      }
     }
   }
 }
