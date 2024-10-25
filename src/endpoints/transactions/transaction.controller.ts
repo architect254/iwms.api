@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { GetUserAccount } from '../account/get-user_account.decorator';
-import { AccountType, UserAccount } from '../account/entities/user_account.entity';
+import { GetUser } from '../account/get-user.decorator';
 import { TransactionService } from './transaction.service';
 import { SearchQueryDto, TransactionDto } from './transaction.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
 } from 'src/core/models/pagination-request.dto';
+import { User } from '../account/entities';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('transactions')
@@ -27,7 +27,7 @@ export class TransactionController {
   @Post()
   async createTransaction(
     @Body() payload: TransactionDto,
-    @GetUserAccount() initiator: UserAccount,
+    @GetUser() initiator: User,
   ) {
     return await this.transactionService.create(payload);
   }
@@ -52,7 +52,7 @@ export class TransactionController {
   async updateTransaction(
     @Param('id') id,
     @Body() payload: TransactionDto,
-    @GetUserAccount() initiator: UserAccount,
+    @GetUser() initiator: User,
   ) {
     return await this.transactionService.update(id, payload);
   }

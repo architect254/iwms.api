@@ -10,7 +10,11 @@ import {
   OneToOne,
 } from 'typeorm';
 import { Transaction } from '../transaction/transaction.entity';
-import { ClientUserAccount } from '../account/entities/user_account.entity';
+import {
+  ActiveMember,
+  BereavedMember,
+  DeceasedMember,
+} from '../account/entities';
 
 export enum ContributionType {
   Membership = 'Membership',
@@ -37,11 +41,13 @@ export abstract class Contribution {
   @OneToOne(() => Transaction, (transaction) => transaction.id)
   transaction: Transaction;
 
-  @ManyToOne(() => ClientUserAccount, (from) => from.from)
-  from: ClientUserAccount;
+  @ManyToOne(() => ActiveMember || BereavedMember, (from) => from.from)
+  from: ActiveMember | BereavedMember;
 
-  @ManyToOne(() => ClientUserAccount, (to) => to.to)
-  to: ClientUserAccount;
+  @ManyToOne(() => BereavedMember || DeceasedMember, (to) => to.to, {
+    nullable: true,
+  })
+  to?: BereavedMember | DeceasedMember;
 
   @CreateDateColumn()
   create_date?: Date;

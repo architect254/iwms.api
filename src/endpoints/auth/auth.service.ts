@@ -10,22 +10,28 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import {
-  AccountType,
-  AdminUserAccount,
-} from '../account/entities/user_account.entity';
-
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
+import { UserMembershipService } from '../account/user-membership.service';
+import {
+  ActiveMember,
+  Admin,
+  BereavedMember,
+  DeactivatedMember,
+  DeceasedMember,
+  Membership,
+  User,
+} from '../account/entities';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(AdminUserAccount)
-    private accountRepo: Repository<AdminUserAccount>,
+    @InjectRepository(User)
+    private accountRepo: Repository<User>,
+    private userMembershipService: UserMembershipService,
   ) {}
 
-  async signUp(credentials: SignUpCredentialsDto): Promise<AdminUserAccount> {
+  async signUp(credentials: SignUpCredentialsDto): Promise<Admin> {
     // const persisted_users = await this.userService.readAll(1, 1);
     // if (persisted_users.length) {
     //   throw new UnauthorizedException(
@@ -34,10 +40,10 @@ export class AuthService {
     // }
     const { password } = credentials;
 
-    const account = new AdminUserAccount();
+    const account = new Admin();
     Object.assign(account, credentials);
 
-    account.type = AccountType.Admin;
+    account.membership = Membership.Admin;
 
     account.salt = await genSalt();
     account.password = await this.hashPassword(password, account.salt);
@@ -57,13 +63,29 @@ export class AuthService {
 
   async signIn(credentials: SignInCredentialsDto) {
     const { id_number, password } = credentials;
-    const account: AdminUserAccount = await this.accountRepo.findOne({
-      where: { id_number },
-    });
+    const account:
+      | Admin
+      | ActiveMember
+      | BereavedMember
+      | DeceasedMember
+      | DeactivatedMember = await this.accountRepo
+      .findOne({
+        where: { id_number },
+      })
+      .then((account) => {
+        return this.userMembershipService.read(account.id);
+      });
 
     if (!account) {
       throw new NotFoundException('This user account does not exist');
     }
+    if (
+      account.membership == Membership.Deactivated ||
+      account.membership == Membership.Deceased
+    ) {
+      throw new UnauthorizedException('This user account has been deactivated');
+    }
+
     const isValid = await compare(password, account?.password);
 
     if (!isValid) {
@@ -80,5 +102,5 @@ export class AuthService {
   }
 }
 export interface JwtPayload {
-  account: AdminUserAccount;
+  account: Admin | ActiveMember | BereavedMember;
 }

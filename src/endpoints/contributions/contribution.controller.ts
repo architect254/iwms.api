@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { GetUserAccount } from '../account/get-user_account.decorator';
-import { UserAccount } from '../account/entities/user_account.entity';
+import { GetUser } from '../account/get-user.decorator';
 import { ContributionService } from './contribution.service';
 import { SearchQueryDto, ContributionDto } from './contribution.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
 } from 'src/core/models/pagination-request.dto';
+import { User } from '../account/entities';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('contributions')
@@ -25,10 +25,7 @@ export class ContributionController {
   constructor(private contributionService: ContributionService) {}
 
   @Post()
-  async create(
-    @Body() payload: ContributionDto,
-    @GetUserAccount() initiator: UserAccount,
-  ) {
+  async create(@Body() payload: ContributionDto, @GetUser() initiator: User) {
     return await this.contributionService.create(payload);
   }
 
@@ -52,7 +49,7 @@ export class ContributionController {
   async update(
     @Param('id') id,
     @Body() payload: ContributionDto,
-    @GetUserAccount() initiator: UserAccount,
+    @GetUser() initiator: User,
   ) {
     return await this.contributionService.update(id, payload);
   }

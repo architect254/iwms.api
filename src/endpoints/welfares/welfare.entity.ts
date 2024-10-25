@@ -1,15 +1,17 @@
 import {
   Entity,
   Column,
-  OneToOne,
   PrimaryGeneratedColumn,
   OneToMany,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
-import { ClientUserAccount } from '../account/entities/user_account.entity';
+import {
+  ActiveMember,
+  BereavedMember,
+  DeactivatedMember,
+  DeceasedMember,
+} from '../account/entities';
 
 @Entity('welfares')
 export class Welfare {
@@ -28,8 +30,16 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToMany(() => ClientUserAccount, (members) => members.welfare)
-  members: ClientUserAccount[];
+  @OneToMany(
+    () => ActiveMember || BereavedMember || DeceasedMember || DeactivatedMember,
+    (members) => members.welfare,
+  )
+  members: (
+    | ActiveMember
+    | BereavedMember
+    | DeceasedMember
+    | DeactivatedMember
+  )[];
 
   @CreateDateColumn()
   create_date?: Date;

@@ -7,12 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { ClientUserAccount } from './user_account.entity';
-
-export enum Gender {
-  Male = 'Male',
-  Female = 'Female',
-}
+import { ActiveMember, Gender } from '..';
 
 @Entity('children')
 export class Child {
@@ -32,13 +27,12 @@ export class Child {
   @Column()
   birth_date: Date;
 
-  @ManyToOne(() => ClientUserAccount, (parent) => parent.children)
-  parent: ClientUserAccount;
+  @ManyToOne(() => ActiveMember, (parent) => parent.children)
+  parent: ActiveMember;
 
   @CreateDateColumn()
   create_date?: Date;
 
   @UpdateDateColumn()
   update_date?: Date;
-  constructor() {}
 }

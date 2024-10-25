@@ -28,15 +28,21 @@ import {
   Transaction,
   TransactionStatus,
 } from '../transaction/transaction.entity';
-import { ClientUserAccount } from '../account/entities/user_account.entity';
+import {
+  ActiveMember,
+  BereavedMember,
+  DeceasedMember,
+} from '../account/entities';
 
 @Injectable()
 export class ContributionService {
   constructor(
     @InjectRepository(Contribution)
     private contributionRepo: Repository<Contribution>,
-    @InjectRepository(ClientUserAccount)
-    private memberRepo: Repository<ClientUserAccount>,
+    @InjectRepository(ActiveMember)
+    private memberRepo: Repository<ActiveMember>,
+    @InjectRepository(BereavedMember || DeceasedMember)
+    private bereavedMemberRepo: Repository<BereavedMember | DeceasedMember>,
     @InjectRepository(Transaction)
     private transactionRepo: Repository<Transaction>,
   ) {}
@@ -136,7 +142,7 @@ export class ContributionService {
       });
     }
     if (contributionFields.to) {
-      contribution.to = await this.memberRepo.findOneBy({
+      contribution.to = await this.bereavedMemberRepo.findOneBy({
         id: contributionFields.to,
       });
     }

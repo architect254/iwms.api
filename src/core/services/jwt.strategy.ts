@@ -8,19 +8,16 @@ import { Repository } from 'typeorm';
 
 import { JwtPayload } from '../../endpoints/auth/auth.service';
 
-import {
-  UserAccount,
-} from '../../endpoints/account/entities/user_account.entity';
-
 import * as config from 'config';
+import { User } from 'src/endpoints/account/entities/user/user.entity';
 
 const JWT_CONFIG = config.get('db');
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectRepository(UserAccount)
-    private accountRepo: Repository<UserAccount>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -28,12 +25,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(jwtPayload: JwtPayload): Promise<UserAccount> {
+  async validate(jwtPayload: JwtPayload): Promise<User> {
     const { id_number } = jwtPayload.account;
-    const DB_USER = await this.accountRepo.findOne({ where: { id_number } });
+    const DB_USER = await this.userRepo.findOne({ where: { id_number } });
 
     if (!DB_USER) {
-      throw new NotFoundException('account not found');
+      throw new NotFoundException('User not found');
     }
 
     return DB_USER;

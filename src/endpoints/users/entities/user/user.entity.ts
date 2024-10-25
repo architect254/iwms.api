@@ -1,24 +1,39 @@
 import {
   Entity,
   Column,
-  CreateDateColumn,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
+  TableInheritance,
 } from 'typeorm';
-import {  ClientUserAccount } from './user_account.entity';
+
+import { Exclude } from 'class-transformer';
 
 export enum Gender {
   Male = 'Male',
   Female = 'Female',
 }
 
-@Entity('spouses')
-export class Spouse {
+export enum Membership {
+  Admin = 'Admin',
+  Active = 'Active',
+  Bereaved = 'Bereaved',
+  Deceased = 'Deceased',
+  Deactivated = 'Deactivated',
+}
+
+@Entity('user_memberships')
+@TableInheritance({
+  column: { type: 'enum', enum: Membership, name: 'membership' },
+})
+export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'enum', enum: Membership })
+  membership: Membership;
+
+  @Column({ nullable: false })
   name: string;
 
   @Column({
@@ -40,8 +55,16 @@ export class Spouse {
   @Column({ unique: true })
   email: string;
 
-  @OneToOne(() => ClientUserAccount, (account) => account.spouse)
-  spouse: ClientUserAccount;
+  @Column({ nullable: true })
+  profile_image?: string;
+
+  @Exclude()
+  @Column()
+  password: string;
+
+  @Exclude()
+  @Column()
+  salt: string;
 
   @CreateDateColumn()
   create_date?: Date;
