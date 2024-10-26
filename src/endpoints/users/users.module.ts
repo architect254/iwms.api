@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { UserMembershipController } from './user-membership.controller';
-import { UserMembershipService } from './user-membership.service';
+import { UserMembershipController } from './users.controller';
+import { UserMembershipService } from './users.service';
 
-import { WelfareModule } from '../welfare/welfare.module';
+import { WelfareModule } from '../welfares/welfare.module';
 
 import { Admin, User } from './entities';
 

@@ -1,25 +1,23 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsEmail,
-  IsDate,
-} from 'class-validator';
+import { IsNotEmpty, IsString, IsEmail, IsDate, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { SignInCredentialsDto } from './sign-in.dto';
+import { Gender } from '../users/entities';
 
 export class SignUpCredentialsDto extends SignInCredentialsDto {
   @IsString()
   name: string;
 
-  @IsEmail()
-  email: string;
+  @IsEnum(Gender)
+  gender: Gender;
 
   @IsDate()
   @Type(() => Date)
   birth_date: Date;
 
-  @IsNotEmpty()
   @IsString()
   phone_number: string;
+
+  @IsEmail()
+  email: string;
 }

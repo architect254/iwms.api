@@ -1,6 +1,6 @@
 export { User, Gender, Membership } from './user/user.entity';
 export { Admin } from './user/admin.entity';
-export { ActiveMember, Role } from './member/active-member.entity';
+export { Member, Role } from './member/member.entity';
 export {
   BereavedMember,
   RelationshipWithDeceased,

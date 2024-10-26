@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { GetUser } from '../account/get-user.decorator';
+import { GetUser } from '../users/get-user.decorator';
 import { TransactionService } from './transaction.service';
 import { SearchQueryDto, TransactionDto } from './transaction.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
 } from 'src/core/models/pagination-request.dto';
-import { User } from '../account/entities';
+import { User } from '../users/entities';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('transactions')

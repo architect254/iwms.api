@@ -12,16 +12,16 @@ import { compare, hash, genSalt } from 'bcrypt';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
-import { UserMembershipService } from '../account/user-membership.service';
+import { UserMembershipService } from '../users/users.service';
 import {
-  ActiveMember,
+  Member,
   Admin,
   BereavedMember,
   DeactivatedMember,
   DeceasedMember,
   Membership,
   User,
-} from '../account/entities';
+} from '../users/entities';
 
 @Injectable()
 export class AuthService {
@@ -65,7 +65,7 @@ export class AuthService {
     const { id_number, password } = credentials;
     const account:
       | Admin
-      | ActiveMember
+      | Member
       | BereavedMember
       | DeceasedMember
       | DeactivatedMember = await this.accountRepo
@@ -102,5 +102,5 @@ export class AuthService {
   }
 }
 export interface JwtPayload {
-  account: Admin | ActiveMember | BereavedMember;
+  user: Admin | Member | BereavedMember;
 }

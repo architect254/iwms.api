@@ -1,6 +1,6 @@
 import { ChildEntity, Column } from 'typeorm';
 
-import { ActiveMember, Membership } from '..';
+import { Member, Membership } from '..';
 
 export enum RelationshipWithDeceased {
   Father = 'Father',
@@ -17,8 +17,8 @@ export enum RelationshipWithDeceased {
   Niece = 'Niece',
   Cousin = 'Cousin',
 }
-@ChildEntity(Membership.Active)
-export class BereavedMember extends ActiveMember {
+@ChildEntity(Membership.Bereaved)
+export class BereavedMember extends Member {
   @Column()
   bereavement_date: Date;
 

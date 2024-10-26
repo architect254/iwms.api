@@ -27,20 +27,20 @@ import {
 import {
   Transaction,
   TransactionStatus,
-} from '../transaction/transaction.entity';
+} from '../transactions/transaction.entity';
 import {
-  ActiveMember,
+  Member,
   BereavedMember,
   DeceasedMember,
-} from '../account/entities';
+} from '../users/entities';
 
 @Injectable()
 export class ContributionService {
   constructor(
     @InjectRepository(Contribution)
     private contributionRepo: Repository<Contribution>,
-    @InjectRepository(ActiveMember)
-    private memberRepo: Repository<ActiveMember>,
+    @InjectRepository(Member)
+    private memberRepo: Repository<Member>,
     @InjectRepository(BereavedMember || DeceasedMember)
     private bereavedMemberRepo: Repository<BereavedMember | DeceasedMember>,
     @InjectRepository(Transaction)

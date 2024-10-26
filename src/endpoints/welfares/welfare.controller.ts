@@ -14,8 +14,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { WelfareService } from './welfare.service';
 import { WelfareDto } from './welfare.dto';
 
-import { GetUser } from '../account/get-user.decorator';
-import { User } from '../account/entities/user/user.entity';
+import { GetUser } from '../users/get-user.decorator';
+import { User } from '../users/entities/user/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('welfares')

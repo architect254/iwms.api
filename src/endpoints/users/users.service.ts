@@ -5,7 +5,7 @@ import { hash, genSalt } from 'bcrypt';
 import { Repository, EntityManager } from 'typeorm';
 
 import {
-  ActiveMember,
+  Member,
   Admin,
   BereavedMember,
   Child,
@@ -15,9 +15,8 @@ import {
   Spouse,
   User,
 } from './entities';
-import { Welfare } from '../welfare/welfare.entity';
 import {
-  ActiveMemberDto,
+  MemberDto,
   AdminDto,
   BereavedMemberDto,
   DeactivatedMemberDto,
@@ -25,6 +24,7 @@ import {
   SearchQueryDto,
   UserDto,
 } from './dtos';
+import { Welfare } from '../welfares/welfare.entity';
 
 @Injectable()
 export class UserMembershipService {
@@ -33,8 +33,8 @@ export class UserMembershipService {
     private userRepo: Repository<User>,
     @InjectRepository(Admin)
     private adminRepo: Repository<Admin>,
-    @InjectRepository(ActiveMember)
-    private activeMemberRepo: Repository<ActiveMember>,
+    @InjectRepository(Member)
+    private activeMemberRepo: Repository<Member>,
     @InjectRepository(BereavedMember)
     private bereavedMemberRepo: Repository<BereavedMember>,
     @InjectRepository(DeceasedMember)
@@ -46,12 +46,12 @@ export class UserMembershipService {
   async create(
     payload:
       | AdminDto
-      | ActiveMemberDto
+      | MemberDto
       | BereavedMemberDto
       | DeceasedMemberDto
       | DeactivatedMemberDto,
   ): Promise<
-    Admin | ActiveMember | BereavedMember | DeceasedMember | DeactivatedMember
+    Admin | Member | BereavedMember | DeceasedMember | DeactivatedMember
   > {
     return this.upsert(payload);
   }
@@ -59,11 +59,11 @@ export class UserMembershipService {
   async read(
     id: string,
   ): Promise<
-    Admin | ActiveMember | BereavedMember | DeceasedMember | DeactivatedMember
+    Admin | Member | BereavedMember | DeceasedMember | DeactivatedMember
   > {
     let user:
       | Admin
-      | ActiveMember
+      | Member
       | BereavedMember
       | DeceasedMember
       | DeactivatedMember = null;
@@ -117,7 +117,7 @@ export class UserMembershipService {
     (
       | User
       | Admin
-      | ActiveMember
+      | Member
       | BereavedMember
       | DeceasedMember
       | DeactivatedMember
@@ -127,7 +127,7 @@ export class UserMembershipService {
     let users: (
       | User
       | Admin
-      | ActiveMember
+      | Member
       | BereavedMember
       | DeceasedMember
       | DeactivatedMember
@@ -184,13 +184,13 @@ export class UserMembershipService {
     id,
     payload: Partial<
       | AdminDto
-      | ActiveMemberDto
+      | MemberDto
       | BereavedMemberDto
       | DeceasedMemberDto
       | DeactivatedMemberDto
     >,
   ): Promise<
-    Admin | ActiveMember | BereavedMember | DeceasedMember | DeactivatedMember
+    Admin | Member | BereavedMember | DeceasedMember | DeactivatedMember
   > {
     return this.upsert(payload, id);
   }
@@ -198,19 +198,19 @@ export class UserMembershipService {
   async upsert(
     payload: Partial<
       | AdminDto
-      | ActiveMemberDto
+      | MemberDto
       | BereavedMemberDto
       | DeceasedMemberDto
       | DeactivatedMemberDto
     >,
     id?: string,
   ): Promise<
-    Admin | ActiveMember | BereavedMember | DeceasedMember | DeactivatedMember
+    Admin | Member | BereavedMember | DeceasedMember | DeactivatedMember
   > {
     const { membership } = payload;
     let user:
         | Admin
-        | ActiveMember
+        | Member
         | BereavedMember
         | DeceasedMember
         | DeactivatedMember,
@@ -225,13 +225,13 @@ export class UserMembershipService {
             id: string,
             user:
               | Admin
-              | ActiveMember
+              | Member
               | BereavedMember
               | DeceasedMember
               | DeactivatedMember,
           ): Promise<
             | Admin
-            | ActiveMember
+            | Member
             | BereavedMember
             | DeceasedMember
             | DeactivatedMember
@@ -248,14 +248,14 @@ export class UserMembershipService {
 
               break;
             case Membership.Active:
-              user = await getUser(id, new ActiveMember());
+              user = await getUser(id, new Member());
 
               const { welfareDto, spouseDto, childrenDto } =
-                payload as ActiveMemberDto;
+                payload as MemberDto;
 
               if (welfareDto) {
-                if ((<ActiveMember>user)?.welfare) {
-                  welfare = (<ActiveMember>user)?.welfare;
+                if ((<Member>user)?.welfare) {
+                  welfare = (<Member>user)?.welfare;
                 } else {
                   welfare = new Welfare();
                   welfare.members = [];
@@ -267,13 +267,13 @@ export class UserMembershipService {
 
                 Object.assign(welfare, welfareDto);
 
-                (<ActiveMember>user).welfare =
+                (<Member>user).welfare =
                   await transactionEntityManager.save(welfare);
               }
 
               if (spouseDto) {
-                if ((<ActiveMember>user)?.spouse) {
-                  spouse = (<ActiveMember>user)?.spouse;
+                if ((<Member>user)?.spouse) {
+                  spouse = (<Member>user)?.spouse;
                 } else {
                   spouse = new Spouse();
                   spouse = await transactionEntityManager.create(
@@ -284,13 +284,13 @@ export class UserMembershipService {
 
                 Object.assign(spouse, spouseDto);
 
-                (<ActiveMember>user).spouse =
+                (<Member>user).spouse =
                   await transactionEntityManager.save(spouse);
               }
 
               if (childrenDto) {
-                if ((<ActiveMember>user)?.children?.length) {
-                  children = (<ActiveMember>user)?.children;
+                if ((<Member>user)?.children?.length) {
+                  children = (<Member>user)?.children;
                 } else {
                   children = new Array<Child>(childrenDto.length).fill(
                     new Child(),
@@ -304,7 +304,7 @@ export class UserMembershipService {
                   Object.assign(children[index], childrenDto[index]);
                 }
 
-                (<ActiveMember>user).children =
+                (<Member>user).children =
                   await transactionEntityManager.save(children);
               }
               break;

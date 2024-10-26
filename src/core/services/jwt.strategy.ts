@@ -9,7 +9,7 @@ import { Repository } from 'typeorm';
 import { JwtPayload } from '../../endpoints/auth/auth.service';
 
 import * as config from 'config';
-import { User } from 'src/endpoints/account/entities/user/user.entity';
+import { User } from 'src/endpoints/users/entities/user/user.entity';
 
 const JWT_CONFIG = config.get('db');
 
@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(jwtPayload: JwtPayload): Promise<User> {
-    const { id_number } = jwtPayload.account;
+    const { id_number } = jwtPayload.user;
     const DB_USER = await this.userRepo.findOne({ where: { id_number } });
 
     if (!DB_USER) {

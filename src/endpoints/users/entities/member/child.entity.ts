@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { ActiveMember, Gender } from '..';
+import { Member, Gender } from '..';
 
 @Entity('children')
 export class Child {
@@ -27,8 +27,8 @@ export class Child {
   @Column()
   birth_date: Date;
 
-  @ManyToOne(() => ActiveMember, (parent) => parent.children)
-  parent: ActiveMember;
+  @ManyToOne(() => Member, (parent) => parent.children)
+  parent: Member;
 
   @CreateDateColumn()
   create_date?: Date;

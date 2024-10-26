@@ -11,15 +11,15 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 
 import { GetUser } from './get-user.decorator';
-import { UserMembershipService } from './user-membership.service';
 import {
   PaginationRequestDto,
   PaginationTransformPipe,
 } from 'src/core/models/pagination-request.dto';
+import { UserMembershipService } from './users.service';
 
 import { User } from './entities';
 import {
-  ActiveMemberDto,
+  MemberDto,
   AdminDto,
   BereavedMemberDto,
   DeactivatedMemberDto,
@@ -40,7 +40,7 @@ export class UserMembershipController {
 
   @Post('active')
   async createActiveMember(
-    @Body() payload: ActiveMemberDto,
+    @Body() payload: MemberDto,
     @GetUser() initiator: User,
   ) {
     return await this.userMembershipService.create(payload);

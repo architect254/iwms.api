@@ -1,9 +1,9 @@
 import { ChildEntity, Column } from 'typeorm';
 
-import { ActiveMember, Membership } from '..';
+import { Member, Membership } from '..';
 
 @ChildEntity(Membership.Deactivated)
-export class DeactivatedMember extends ActiveMember {
+export class DeactivatedMember extends Member {
   @Column()
   deactivation_date: Date;
 

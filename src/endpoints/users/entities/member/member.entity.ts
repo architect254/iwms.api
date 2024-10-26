@@ -1,5 +1,4 @@
-import { Contribution } from 'src/endpoints/contribution/contribution.entity';
-import { Welfare } from 'src/endpoints/welfare/welfare.entity';
+
 import {
   ChildEntity,
   Column,
@@ -10,6 +9,8 @@ import {
 } from 'typeorm';
 
 import { Child, Membership, Spouse, User } from '..';
+import { Contribution } from 'src/endpoints/contributions/contribution.entity';
+import { Welfare } from 'src/endpoints/welfares/welfare.entity';
 
 export enum Role {
   ChairPerson = 'ChairPerson',
@@ -19,7 +20,7 @@ export enum Role {
 }
 
 @ChildEntity(Membership.Active)
-export class ActiveMember extends User {
+export class Member extends User {
   @Column({
     type: 'enum',
     enum: Role,

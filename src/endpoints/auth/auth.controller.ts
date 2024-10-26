@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
-import { Admin } from '../account/entities';
+import { Admin, BereavedMember, Member } from '../users/entities';
 
 @Controller('auth')
 export class AuthController {
@@ -29,9 +29,10 @@ export class AuthController {
     @Body()
     payload: SignInCredentialsDto,
   ): Promise<{ token: string }> {
-    const account = await this.authService.signIn(payload);
+    const user: Admin | Member | BereavedMember =
+      await this.authService.signIn(payload);
 
-    const jwtPayload: JwtPayload = { account };
+    const jwtPayload: JwtPayload = { user };
     const token = await this.jwtService.sign(jwtPayload);
 
     return { token };

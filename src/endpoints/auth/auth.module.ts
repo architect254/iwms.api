@@ -7,7 +7,7 @@ import { JwtStrategy } from '../../core/services/jwt.strategy';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
-import { UserMembershipModule } from '../account/user-membership.module';
+import { UserMembershipModule } from '../users/users.module';
 
 import * as config from 'config';
 

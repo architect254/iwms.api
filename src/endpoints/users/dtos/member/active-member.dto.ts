@@ -8,9 +8,9 @@ import {
 } from 'class-validator';
 import { ChildDto, SpouseDto, UserDto } from '..';
 import { Membership, User } from '../../entities';
-import { WelfareDto } from 'src/endpoints/welfare/welfare.dto';
+import { WelfareDto } from '../../../welfares/welfare.dto';
 
-export class ActiveMemberDto extends UserDto {
+export class MemberDto extends UserDto {
   @ValidateIf((user: User) => user.membership == Membership.Active)
   @IsNotEmptyObject()
   @ValidateNested()

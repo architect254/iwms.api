@@ -9,12 +9,12 @@ import {
   PrimaryGeneratedColumn,
   OneToOne,
 } from 'typeorm';
-import { Transaction } from '../transaction/transaction.entity';
+import { Transaction } from '../transactions/transaction.entity';
 import {
-  ActiveMember,
+  Member,
   BereavedMember,
   DeceasedMember,
-} from '../account/entities';
+} from '../users/entities';
 
 export enum ContributionType {
   Membership = 'Membership',
@@ -41,8 +41,8 @@ export abstract class Contribution {
   @OneToOne(() => Transaction, (transaction) => transaction.id)
   transaction: Transaction;
 
-  @ManyToOne(() => ActiveMember || BereavedMember, (from) => from.from)
-  from: ActiveMember | BereavedMember;
+  @ManyToOne(() => Member || BereavedMember, (from) => from.from)
+  from: Member | BereavedMember;
 
   @ManyToOne(() => BereavedMember || DeceasedMember, (to) => to.to, {
     nullable: true,

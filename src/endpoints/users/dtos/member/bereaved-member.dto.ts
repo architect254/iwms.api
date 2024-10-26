@@ -1,10 +1,10 @@
 import { Type } from 'class-transformer';
 import { IsString, IsDate, IsEnum } from 'class-validator';
 
-import { ActiveMemberDto } from '..';
+import { MemberDto } from '..';
 import { RelationshipWithDeceased } from '../../entities';
 
-export class BereavedMemberDto extends ActiveMemberDto {
+export class BereavedMemberDto extends MemberDto {
   @IsDate()
   @Type(() => Date)
   bereavement_date: Date;

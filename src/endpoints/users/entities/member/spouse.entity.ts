@@ -7,7 +7,7 @@ import {
   OneToOne,
 } from 'typeorm';
 
-import { ActiveMember, Gender } from '..';
+import { Member, Gender } from '..';
 
 @Entity('spouses')
 export class Spouse {
@@ -36,8 +36,8 @@ export class Spouse {
   @Column({ unique: true })
   email: string;
 
-  @OneToOne(() => ActiveMember, (account) => account.spouse)
-  spouse: ActiveMember;
+  @OneToOne(() => Member, (account) => account.spouse)
+  spouse: Member;
 
   @CreateDateColumn()
   create_date?: Date;

@@ -1,6 +1,6 @@
 export { UserDto, SearchQueryDto } from './user/user.dto';
 export { AdminDto } from './user/admin.dto';
-export { ActiveMemberDto } from './member/active-member.dto';
+export { MemberDto } from './member/active-member.dto';
 export { BereavedMemberDto } from './member/bereaved-member.dto';
 export { DeceasedMemberDto } from './member/deceased-member.dto';
 export { DeactivatedMemberDto } from './member/deactivated-member.dto';

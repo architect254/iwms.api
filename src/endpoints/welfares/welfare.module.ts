@@ -4,19 +4,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WelfareController } from './welfare.controller';
 import { WelfareService } from './welfare.service';
 import {
-  ActiveMember,
+  Member,
   BereavedMember,
   Child,
   DeactivatedMember,
   DeceasedMember,
   Spouse,
-} from '../account/entities';
+} from '../users/entities';
 import { Welfare } from './welfare.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      ActiveMember,
+      Member,
       BereavedMember,
       DeceasedMember,
       DeactivatedMember,

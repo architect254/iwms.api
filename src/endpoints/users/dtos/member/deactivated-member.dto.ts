@@ -1,8 +1,8 @@
 import { Type } from 'class-transformer';
 import { IsDate, IsString } from 'class-validator';
-import { ActiveMemberDto } from '..';
+import { MemberDto } from '..';
 
-export class DeactivatedMemberDto extends ActiveMemberDto {
+export class DeactivatedMemberDto extends MemberDto {
   @IsDate()
   @Type(() => Date)
   deactivation_date: Date;

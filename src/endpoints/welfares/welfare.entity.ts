@@ -7,11 +7,11 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import {
-  ActiveMember,
+  Member,
   BereavedMember,
   DeactivatedMember,
   DeceasedMember,
-} from '../account/entities';
+} from '../users/entities';
 
 @Entity('welfares')
 export class Welfare {
@@ -30,16 +30,8 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToMany(
-    () => ActiveMember || BereavedMember || DeceasedMember || DeactivatedMember,
-    (members) => members.welfare,
-  )
-  members: (
-    | ActiveMember
-    | BereavedMember
-    | DeceasedMember
-    | DeactivatedMember
-  )[];
+  @OneToMany(() => Member, (members) => members.welfare)
+  members: Member[];
 
   @CreateDateColumn()
   create_date?: Date;
