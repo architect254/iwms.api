@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   OneToOne,
 } from 'typeorm';
-import { DeactivatedMember, DeceasedMember, Member } from '../users/entities';
+import { DeactivatedMember, DeceasedMember, Member } from '../members/entities';
 import { BereavedMember } from '../members/entities';
 
 @Entity('welfares')

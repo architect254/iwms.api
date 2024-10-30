@@ -1,7 +1,14 @@
-import { IsString, IsEmail, ValidateIf, IsOptional } from 'class-validator';
-import { MemberDto } from '../users/dtos';
+import {
+  IsString,
+  IsEmail,
+  ValidateIf,
+  IsOptional,
+  IsNotEmptyObject,
+  ValidateNested,
+} from 'class-validator';
+import { MemberDto } from '../members/dtos';
+import { Type } from 'class-transformer';
 
-export class specialMemberDto extends MemberDto {}
 export class WelfareDto {
   @ValidateIf(
     (welfare) => !(welfare.name || welfare.phone_number || welfare.email),
@@ -24,4 +31,19 @@ export class WelfareDto {
   @IsOptional()
   @IsString()
   logo_image: string;
+
+  @IsNotEmptyObject()
+  @ValidateNested()
+  @Type(() => MemberDto)
+  chairpersonDto: MemberDto;
+
+  @IsNotEmptyObject()
+  @ValidateNested()
+  @Type(() => MemberDto)
+  treasurerDto: MemberDto;
+
+  @IsNotEmptyObject()
+  @ValidateNested()
+  @Type(() => MemberDto)
+  secretaryDto: MemberDto;
 }

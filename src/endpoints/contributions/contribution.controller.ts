@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-import { GetUser } from '../users/get-user.decorator';
 import { ContributionService } from './contribution.service';
 import { SearchQueryDto, ContributionDto } from './contribution.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
 } from 'src/core/models/dtos/pagination-request.dto';
-import { User } from '../users/entities';
+import { GetUser } from 'src/core/decorators/get-user.decorator';
+import { User } from 'src/core/models/entities/user.entity';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('contributions')

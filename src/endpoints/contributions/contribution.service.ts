@@ -32,7 +32,7 @@ import {
   Member,
   BereavedMember,
   DeceasedMember,
-} from '../users/entities';
+} from '../members/entities';
 
 @Injectable()
 export class ContributionService {

@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString, IsEmail, IsDate, IsEnum } from 'class-validator';
 import { Type } from 'class-transformer';
 
 import { SignInCredentialsDto } from './sign-in.dto';
-import { Gender } from '../users/entities';
+import { Gender } from 'src/core/models/entities/user.entity';
 
 export class SignUpCredentialsDto extends SignInCredentialsDto {
   @IsString()

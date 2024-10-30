@@ -14,7 +14,7 @@ import {
   Member,
   BereavedMember,
   DeceasedMember,
-} from '../users/entities';
+} from '../members/entities';
 
 export enum ContributionType {
   Membership = 'Membership',

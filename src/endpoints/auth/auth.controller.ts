@@ -7,7 +7,8 @@ import { AuthService } from './auth.service';
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
 
-import { Admin, BereavedMember, Member } from '../users/entities';
+import { BereavedMember, Member } from '../members/entities';
+import { Admin } from '../admins/entities/admin.entity';
 
 @Controller('auth')
 export class AuthController {
