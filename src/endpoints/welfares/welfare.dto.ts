@@ -1,5 +1,7 @@
 import { IsString, IsEmail, ValidateIf, IsOptional } from 'class-validator';
+import { MemberDto } from '../users/dtos';
 
+export class specialMemberDto extends MemberDto {}
 export class WelfareDto {
   @ValidateIf(
     (welfare) => !(welfare.name || welfare.phone_number || welfare.email),

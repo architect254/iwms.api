@@ -12,22 +12,17 @@ import { compare, hash, genSalt } from 'bcrypt';
 
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
-import { UserMembershipService } from '../users/users.service';
-import {
-  Member,
-  Admin,
-  BereavedMember,
-  DeactivatedMember,
-  DeceasedMember,
-  Membership,
-  User,
-} from '../users/entities';
+import { Member } from '../members/entities';
+import { Admin } from '../admins/entities/admin.entity';
+
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private accountRepo: Repository<User>,
+    @InjectRepository(Member)
+    private memberRepo: Repository<Member>,
+    @InjectRepository(Admin)
+    private adminRepo: Repository<Admin>,
     private userMembershipService: UserMembershipService,
   ) {}
 
@@ -102,5 +97,5 @@ export class AuthService {
   }
 }
 export interface JwtPayload {
-  user: Admin | Member | BereavedMember;
+  user: Member | Admin;
 }

@@ -16,7 +16,7 @@ import { SearchQueryDto, ContributionDto } from './contribution.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
-} from 'src/core/models/pagination-request.dto';
+} from 'src/core/models/dtos/pagination-request.dto';
 import { User } from '../users/entities';
 
 // @UseGuards(AuthGuard('jwt'))

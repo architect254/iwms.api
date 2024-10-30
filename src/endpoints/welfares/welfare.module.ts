@@ -10,7 +10,7 @@ import {
   DeactivatedMember,
   DeceasedMember,
   Spouse,
-} from '../users/entities';
+} from '../members/entities';
 import { Welfare } from './welfare.entity';
 
 @Module({
