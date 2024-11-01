@@ -16,8 +16,6 @@ import { WelfareDto } from './welfare.dto';
 import { GetUser } from 'src/core/decorators/get-user.decorator';
 import { User } from 'src/core/models/entities/user.entity';
 
-
-
 // @UseGuards(AuthGuard('jwt'))
 @Controller('welfares')
 export class WelfareController {
@@ -28,17 +26,17 @@ export class WelfareController {
     return await this.welfareService.create(payload);
   }
 
-  @Get('/:id')
-  async get(@Param('id') id) {
-    return await this.welfareService.read(id);
-  }
-
   @Get()
   async getMany(
     @Query('page', ParseIntPipe) page: number,
     @Query('take', ParseIntPipe) take: number,
   ) {
     return await this.welfareService.readMany(page, take);
+  }
+
+  @Get('/:id')
+  async get(@Param('id') id) {
+    return await this.welfareService.read(id);
   }
 
   @Put('/:id')

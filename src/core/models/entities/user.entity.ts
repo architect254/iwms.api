@@ -16,13 +16,15 @@ export abstract class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: false })
+  @Column()
   name: string;
+
+  @Column({ default: 'random' })
+  random: string;
 
   @Column({
     type: 'enum',
     enum: Gender,
-    default: Gender[Gender.Male],
   })
   gender: Gender;
 

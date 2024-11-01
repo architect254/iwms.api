@@ -7,6 +7,7 @@ import {
   Query,
   Put,
   Delete,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -15,10 +16,7 @@ import {
   PaginationRequestDto,
   PaginationTransformPipe,
 } from 'src/core/models/dtos/pagination-request.dto';
-import {
-  MemberDto,
-  SearchQueryDto,
-} from './dtos';
+import { MemberDto, SearchQueryDto } from './dtos';
 import { MembersService } from './members.service';
 import { User } from 'src/core/models/entities/user.entity';
 
@@ -28,10 +26,7 @@ export class MembersController {
   constructor(private membersService: MembersService) {}
 
   @Post()
-  async create(
-    @Body() payload: MemberDto,
-    @GetUser() initiator: User,
-  ) {
+  async create(@Body() payload: MemberDto, @GetUser() initiator: User) {
     return await this.membersService.create(payload);
   }
 
@@ -43,11 +38,16 @@ export class MembersController {
     queryParams: SearchQueryDto,
   ) {
     const { page, take } = paginationRequest;
-    return await this.membersService.readMany(
-      page,
-      take,
-      queryParams,
-    );
+    return await this.membersService.readMany(page, take, queryParams);
+  }
+
+  @Get('welfare/:id')
+  async getManyByWelfare(
+    @Param('id') id,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('take', ParseIntPipe) take: number,
+  ) {
+    return await this.membersService.readManyByWelfareId(id, page, take);
   }
 
   @Get(':id')

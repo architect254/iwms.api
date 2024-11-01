@@ -19,6 +19,13 @@ export enum RelationshipWithDeceased {
 }
 @ChildEntity(Membership.Bereaved)
 export class BereavedMember extends Member {
+  @Column({
+    type: 'enum',
+    enum: Membership,
+    default: Membership[Membership.Bereaved],
+  })
+  membership: Membership;
+  
   @Column()
   bereavement_date: Date;
 

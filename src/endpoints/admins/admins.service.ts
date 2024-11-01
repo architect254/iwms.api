@@ -44,10 +44,10 @@ export class AdminsService {
         skip,
         take,
       });
+      return admins;
     } catch (error) {
       throw new Error(error);
     }
-    return admins;
   }
 
   async update(id, payload: Partial<AdminDto>): Promise<Admin> {

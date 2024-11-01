@@ -128,6 +128,31 @@ export class MembersService {
     return members;
   }
 
+  async readManyByWelfareId(
+    id: string,
+    page: number,
+    take: number,
+  ): Promise<Member[]> {
+    const skip: number = Number(take * (page - 1));
+
+    let members: Member[];
+
+    try {
+      members = await this.memberRepo.find({
+        skip,
+        take,
+        where: { welfareId: id },
+        relations: {
+          spouse: true,
+          children: true,
+        },
+      });
+      return members;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
   async update(id, payload: Partial<MemberDto>): Promise<Member> {
     return this.upsert(payload, id);
   }

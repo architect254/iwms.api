@@ -56,35 +56,38 @@ export class AuthService {
 
   async signIn(credentials: SignInCredentialsDto) {
     const { id_number, password } = credentials;
-    let user;
+    let user: Member | Admin;
 
-    user = await this.memberRepo
+    user = (await this.memberRepo
       .findOne({
         where: { id_number },
       })
       .then((user) => {
-        return this.membersService.read(user.id);
-      });
+        if (user) {
+          return this.membersService.read(user?.id);
+        }
+        return null;
+      })) as Member;
 
-      if (
-        user.membership == Membership.Deactivated ||
-        user.membership == Membership.Deceased
-      ) {
-        throw new UnauthorizedException('This user account has been deactivated');
-      }
-
-    if (!user) {
-      user = await this.adminRepo.findOne({ where: { id_number } });
-      if (!user) {
-        throw new NotFoundException('This user account does not exist');
-      }
+    if (
+      user &&
+      (user.membership == Membership.Deactivated ||
+        user.membership == Membership.Deceased)
+    ) {
+      throw new UnauthorizedException('This user has been deactivated');
     }
 
+    if (!user) {
+      user = await this.adminRepo.findOne({ where: { id_number } }) as Admin;
+      if (!user) {
+        throw new NotFoundException('This user does not exist');
+      }
+    }
 
     const isValid = await compare(password, user?.password);
 
     if (!isValid) {
-      throw new ConflictException('Invalid user account credentials');
+      throw new ConflictException('Invalid user credentials');
     }
 
     delete user.password && delete user.salt;

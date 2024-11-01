@@ -1,4 +1,3 @@
-
 import {
   ChildEntity,
   Column,
@@ -17,15 +16,17 @@ import { User } from 'src/core/models/entities/user.entity';
 
 export enum Membership {
   Active = 'Active',
+  Member = 'Member',
   Bereaved = 'Bereaved',
   Deceased = 'Deceased',
   Deactivated = 'Deactivated',
 }
 
-@Entity('memberships')
+@Entity('members')
 @TableInheritance({
   column: { type: 'enum', enum: Membership, name: 'membership' },
-})export class Member extends User {
+})
+export class Member extends User {
   @Column({
     type: 'enum',
     enum: Membership,
@@ -36,6 +37,9 @@ export enum Membership {
   @ManyToOne(() => Welfare, (welfare) => welfare.members, { eager: true })
   welfare: Welfare;
 
+  @Column()
+  welfareId: string;
+
   @OneToMany(() => Contribution, (from) => from.from)
   from: Contribution[];
 
@@ -45,6 +49,9 @@ export enum Membership {
   @OneToOne(() => Spouse, (spouse) => spouse.spouse, { eager: true })
   @JoinColumn()
   spouse: Spouse;
+
+  @Column()
+  spouseId: string;
 
   @OneToMany(() => Child, (children) => children.parent, { eager: true })
   children: Child[];

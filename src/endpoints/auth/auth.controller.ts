@@ -30,7 +30,7 @@ export class AuthController {
     @Body()
     payload: SignInCredentialsDto,
   ): Promise<{ token: string }> {
-    const user: Admin | Member | BereavedMember =
+    const user: Admin | Member =
       await this.authService.signIn(payload);
 
     const jwtPayload: JwtPayload = { user };
