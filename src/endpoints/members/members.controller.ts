@@ -9,6 +9,8 @@ import {
   Delete,
   ParseIntPipe,
   ValidationPipe,
+  Req,
+  Header,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -17,7 +19,12 @@ import {
   PaginationRequestDto,
   PaginationTransformPipe,
 } from 'src/core/models/dtos/pagination-request.dto';
-import { BereavedMemberDto, MemberDto, SearchQueryDto } from './dtos';
+import {
+  BereavedMemberDto,
+  MemberDto,
+  SearchQueryDto,
+  UpdateToBereavedMemberDto,
+} from './dtos';
 import { MembersService } from './members.service';
 import { User } from 'src/core/models/entities/user.entity';
 
@@ -40,7 +47,7 @@ export class MembersController {
     return await this.membersService.readManyByWelfareId(id, page, take);
   }
 
-  @Get('/:id')
+  @Get(':id')
   async get(@Param('id') id: string) {
     return await this.membersService.read(id);
   }
@@ -55,16 +62,20 @@ export class MembersController {
     return await this.membersService.readMany(page, take, queryParams);
   }
 
-  @Put('/:id/is-bereaved')
+  @Put(':id/is-bereaved')
+  @Header('content-type', 'application/json')
   async updateToBereaved(
     @Param('id') id: string,
-    @Body() payload: Partial<BereavedMemberDto>,
+    // @Req() req: Request,
+    @Body() payload: UpdateToBereavedMemberDto,
     @GetUser() initiator: User,
   ) {
-    await this.membersService.updateToBereaved(id, payload);
+    console.log('update to bereaved 0', id);
+    console.log('update to bereaved 1', payload);
+    return await this.membersService.updateToBereaved(id, payload);
   }
 
-  @Put('/:id')
+  @Put(':id')
   async update(
     @Param('id') id: string,
     @Body() payload: Partial<MemberDto>,

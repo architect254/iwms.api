@@ -18,6 +18,7 @@ import {
   BereavedMemberDto,
   DeactivatedMemberDto,
   DeceasedMemberDto,
+  UpdateToBereavedMemberDto,
 } from './dtos';
 import { Welfare } from '../welfares/welfare.entity';
 import { SearchQueryDto } from './dtos/member.dto';
@@ -141,7 +142,13 @@ export class MembersService {
             ...deceasedMembers,
             ...deactivatedMembers,
           ];
-          console.log('all membership', members);
+          console.log(
+            'all membership',
+            activeMembers,
+            bereavedMembers,
+            deceasedMembers,
+            deactivatedMembers,
+          );
 
           break;
       }
@@ -180,24 +187,22 @@ export class MembersService {
     return this.upsert(payload, id);
   }
 
-  async updateToBereaved(id, payload: Partial<BereavedMemberDto>) {
-    let member: Member | BereavedMember | DeceasedMember | DeactivatedMember;
-    return this.memberRepo.manager.transaction(
+  async updateToBereaved(id, payload: UpdateToBereavedMemberDto) {
+    return this.bereavedMemberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
         try {
           if (id) {
-            member = await transactionEntityManager.findOneBy<
-              Member | BereavedMember | DeceasedMember | DeactivatedMember
-            >(Member, {
-              id,
-            });
-
-            Object.assign(member, payload);
-
+            const bereavedMember = Object.assign(
+              new BereavedMember(),
+              payload,
+              {
+                membership: Membership.Bereaved,
+              },
+            );
             await transactionEntityManager.update(
               Member,
-              member,
-              new BereavedMember(),
+              { id },
+              bereavedMember,
             );
           }
         } catch (error) {
