@@ -1,7 +1,8 @@
 db:
   synchronize: true
-  host: 'dpg-crvbhbu8ii6s738p95rg-a'
+  host: 'dpg-csj54368ii6s73cvh8og-a'
+  database: 'iwms_db_ijww'
   username: 'iwms_client_user'
-  password: 'ML3oLl7hkN1MfnSaWVOfvmI6Y0ohHVG2'
+  password: 'afAUuu4qYvfLWkJUQeIcrR037cs2BPwD'
 jwt:
   secret: 'topSecretSecret001'
