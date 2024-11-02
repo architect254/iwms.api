@@ -25,7 +25,7 @@ export class Welfare {
   @Column({ unique: true })
   phone_number: string;
 
-  @Column()
+  @Column({ default: 'iwms-5vlj.onrender.com', nullable: true })
   hostname: string;
 
   @Column({ nullable: true })
