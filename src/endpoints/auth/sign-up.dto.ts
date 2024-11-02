@@ -1,33 +1,23 @@
-import {
-  IsNotEmpty,
-  IsString,
-  IsEmail,
-  IsDate,
-  IsStrongPassword,
-} from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { IsNotEmpty, IsString, IsEmail, IsDate, IsEnum } from 'class-validator';
+import { Type } from 'class-transformer';
 
 import { SignInCredentialsDto } from './sign-in.dto';
+import { Gender } from 'src/core/models/entities/user.entity';
 
 export class SignUpCredentialsDto extends SignInCredentialsDto {
-  @IsNotEmpty()
   @IsString()
-  first_name: string;
+  name: string;
 
-  @IsNotEmpty()
-  @IsString()
-  last_name: string;
+  @IsEnum(Gender)
+  gender: Gender;
 
-  @IsNotEmpty()
-  @IsString()
-  id_number: string;
-
-  @IsNotEmpty()
   @IsDate()
-  @Transform((date) => new Date(date.value))
+  @Type(() => Date)
   birth_date: Date;
 
-  @IsNotEmpty()
   @IsString()
   phone_number: string;
+
+  @IsEmail()
+  email: string;
 }

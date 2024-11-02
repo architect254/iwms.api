@@ -10,22 +10,23 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { compare, hash, genSalt } from 'bcrypt';
 
-import { User, UserRole } from '../user/entities/user.entity';
-
 import { SignInCredentialsDto } from './sign-in.dto';
 import { SignUpCredentialsDto } from './sign-up.dto';
-
-import { UserService } from '../user/user.service';
+import { Member, Membership } from '../members/entities';
+import { Admin } from '../admins/entities/admin.entity';
+import { MembersService } from '../members/members.service';
 
 @Injectable()
 export class AuthService {
   constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
-    private userService: UserService,
+    @InjectRepository(Member)
+    private memberRepo: Repository<Member>,
+    private membersService: MembersService,
+    @InjectRepository(Admin)
+    private adminRepo: Repository<Admin>,
   ) {}
 
-  async signUp(credentials: SignUpCredentialsDto): Promise<User> {
+  async signUp(credentials: SignUpCredentialsDto): Promise<Admin> {
     // const persisted_users = await this.userService.readAll(1, 1);
     // if (persisted_users.length) {
     //   throw new UnauthorizedException(
@@ -34,20 +35,18 @@ export class AuthService {
     // }
     const { password } = credentials;
 
-    const user = new User();
-    Object.assign(user, credentials);
+    const admin = new Admin();
+    Object.assign(admin, credentials);
 
-    user.user_role = UserRole.SITE_ADMIN;
-
-    user.salt = await genSalt();
-    user.password = await this.hashPassword(password, user.salt);
+    admin.salt = await genSalt();
+    admin.password = await this.hashPassword(password, admin.salt);
 
     try {
-      return await this.userRepo.save(user);
+      return await this.adminRepo.save(admin);
     } catch (error) {
       if (error.errno === 1062) {
         throw new ConflictException(
-          'User with same credentials already exists',
+          'User with same credentials already exists in our database',
         );
       } else {
         throw new InternalServerErrorException(error.message);
@@ -56,12 +55,35 @@ export class AuthService {
   }
 
   async signIn(credentials: SignInCredentialsDto) {
-    const { email, password } = credentials;
-    const user = await this.userRepo.findOne({ where: { email } });
+    const { id_number, password } = credentials;
+    let user: Member | Admin;
+
+    user = (await this.memberRepo
+      .findOne({
+        where: { id_number },
+      })
+      .then((user) => {
+        if (user) {
+          return this.membersService.read(user?.id);
+        }
+        return null;
+      })) as Member;
+
+    if (
+      user &&
+      (user.membership == Membership.Deactivated ||
+        user.membership == Membership.Deceased)
+    ) {
+      throw new UnauthorizedException('This user has been deactivated');
+    }
 
     if (!user) {
-      throw new NotFoundException('This user does not exist in our database');
+      user = await this.adminRepo.findOne({ where: { id_number } }) as Admin;
+      if (!user) {
+        throw new NotFoundException('This user does not exist');
+      }
     }
+
     const isValid = await compare(password, user?.password);
 
     if (!isValid) {
@@ -76,4 +98,7 @@ export class AuthService {
   async hashPassword(input: string, salt: string): Promise<string> {
     return hash(input, salt);
   }
+}
+export interface JwtPayload {
+  user: Member | Admin;
 }

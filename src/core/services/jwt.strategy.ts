@@ -6,19 +6,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
 
-import { JwtPayload } from '../../core/models/jwt.payload';
-
-import { User } from '../../endpoints/user/entities/user.entity';
+import { JwtPayload } from '../../endpoints/auth/auth.service';
 
 import * as config from 'config';
+import { Member } from 'src/endpoints/members/entities';
+import { Admin } from 'src/endpoints/admins/entities/admin.entity';
 
 const JWT_CONFIG = config.get('db');
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    @InjectRepository(Member)
+    private memberRepo: Repository<Member>,
+    @InjectRepository(Admin)
+    private adminRepo: Repository<Admin>,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -26,14 +28,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(jwtPayload: JwtPayload): Promise<User> {
-    const { email } = jwtPayload.user;
-    const DB_USER = await this.userRepo.findOne({ where: { email } });
+  async validate(jwtPayload: JwtPayload): Promise<Member | Admin> {
+    const { user } = jwtPayload;
+    const { id_number } = user;
 
-    if (!DB_USER) {
-      throw new NotFoundException('user not found');
+    let DB_USER: Member | Admin;
+
+    if (user instanceof Member) {
+      DB_USER = await this.memberRepo.findOne({ where: { id_number } });
+    } else {
+      DB_USER = await this.adminRepo.findOne({ where: { id_number } });
     }
 
+    if (!DB_USER) {
+      throw new NotFoundException('User not found');
+    }
     return DB_USER;
   }
 }
