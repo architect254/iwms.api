@@ -25,11 +25,15 @@ import { User } from 'src/core/models/entities/user.entity';
 export class AdminsController {
   constructor(private adminsService: AdminsService) {}
 
-  @Post('')
+  @Post()
   async createAdmin(@Body() payload: AdminDto, @GetUser() initiator: User) {
     return await this.adminsService.create(payload);
   }
 
+  @Get(':id')
+  async get(@Param('id') id: string) {
+    return await this.adminsService.read(id);
+  }
 
   @Get()
   async getMany(
@@ -44,11 +48,6 @@ export class AdminsController {
       take,
       queryParams,
     );
-  }
-
-  @Get(':id')
-  async get(@Param('id') id: string) {
-    return await this.adminsService.read(id);
   }
 
   @Put(':id')

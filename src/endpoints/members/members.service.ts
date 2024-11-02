@@ -42,41 +42,42 @@ export class MembersService {
   async read(id: string): Promise<Member> {
     let member: Member | BereavedMember | DeceasedMember | DeactivatedMember =
       null;
-
+    console.log('here', id);
     try {
-      member = await this.memberRepo
-        .findOneBy({
-          id,
-        })
-        .then(async (user) => {
-          switch (user.membership) {
-            case Membership.Active:
-              return this.memberRepo.findOne({
-                where: { id: user.id },
-                relations: { spouse: true, children: true, welfare: true },
-              });
-            case Membership.Bereaved:
-              return this.bereavedMemberRepo.findOne({
-                where: { id: user.id },
-                relations: { spouse: true, children: true, welfare: true },
-              });
-            case Membership.Deceased:
-              return this.deceasedMemberRepo.findOne({
-                where: { id: user.id },
-                relations: { spouse: true, children: true, welfare: true },
-              });
-            case Membership.Deactivated:
-              return this.deactivatedMemberRepo.findOne({
-                where: { id: user.id },
-                relations: { spouse: true, children: true, welfare: true },
-              });
-          }
+      member = await this.memberRepo.findOne({
+        where: { id },
+        relations: { spouse: true, children: true, welfare: true },
+      });
+      console.log('member 0', member);
+
+      if (!member) {
+        member = await this.bereavedMemberRepo.findOne({
+          where: { id },
+          relations: { spouse: true, children: true, welfare: true },
         });
+      }
+      console.log('member 1', member);
+
+      if (!member) {
+        member = await this.deceasedMemberRepo.findOne({
+          where: { id },
+          relations: { spouse: true, children: true, welfare: true },
+        });
+      }
+      console.log('member 2', member);
+
+      if (!member) {
+        member = await this.deactivatedMemberRepo.findOne({
+          where: { id },
+          relations: { spouse: true, children: true, welfare: true },
+        });
+      }
+      console.log('member 3', member);
+
+      return member;
     } catch (error) {
       throw new Error(error);
     }
-
-    return member;
   }
 
   async readMany(
@@ -121,6 +122,28 @@ export class MembersService {
             take,
           });
           break;
+        default:
+          const [
+            activeMembers,
+            bereavedMembers,
+            deceasedMembers,
+            deactivatedMembers,
+          ] = await Promise.all([
+            this.memberRepo.find({ skip, take }),
+            this.bereavedMemberRepo.find({ skip, take }),
+            this.deceasedMemberRepo.find({ skip, take }),
+            this.deactivatedMemberRepo.find({ skip, take }),
+          ]);
+
+          members = [
+            ...activeMembers,
+            ...bereavedMembers,
+            ...deceasedMembers,
+            ...deactivatedMembers,
+          ];
+          console.log('all membership', members);
+
+          break;
       }
     } catch (error) {
       throw new Error(error);
@@ -155,6 +178,33 @@ export class MembersService {
 
   async update(id, payload: Partial<MemberDto>): Promise<Member> {
     return this.upsert(payload, id);
+  }
+
+  async updateToBereaved(id, payload: Partial<BereavedMemberDto>) {
+    let member: Member | BereavedMember | DeceasedMember | DeactivatedMember;
+    return this.memberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        try {
+          if (id) {
+            member = await transactionEntityManager.findOneBy<
+              Member | BereavedMember | DeceasedMember | DeactivatedMember
+            >(Member, {
+              id,
+            });
+
+            Object.assign(member, payload);
+
+            await transactionEntityManager.update(
+              Member,
+              member,
+              new BereavedMember(),
+            );
+          }
+        } catch (error) {
+          throw new Error(error);
+        }
+      },
+    );
   }
 
   async upsert(payload: Partial<MemberDto>, id?: string): Promise<Member> {

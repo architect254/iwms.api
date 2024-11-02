@@ -8,6 +8,7 @@ import {
   Put,
   Delete,
   ParseIntPipe,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -16,7 +17,7 @@ import {
   PaginationRequestDto,
   PaginationTransformPipe,
 } from 'src/core/models/dtos/pagination-request.dto';
-import { MemberDto, SearchQueryDto } from './dtos';
+import { BereavedMemberDto, MemberDto, SearchQueryDto } from './dtos';
 import { MembersService } from './members.service';
 import { User } from 'src/core/models/entities/user.entity';
 
@@ -30,17 +31,6 @@ export class MembersController {
     return await this.membersService.create(payload);
   }
 
-  @Get()
-  async getMany(
-    @Query(new PaginationTransformPipe())
-    paginationRequest: PaginationRequestDto,
-    @Query()
-    queryParams: SearchQueryDto,
-  ) {
-    const { page, take } = paginationRequest;
-    return await this.membersService.readMany(page, take, queryParams);
-  }
-
   @Get('welfare/:id')
   async getManyByWelfare(
     @Param('id') id,
@@ -50,12 +40,31 @@ export class MembersController {
     return await this.membersService.readManyByWelfareId(id, page, take);
   }
 
-  @Get(':id')
+  @Get('/:id')
   async get(@Param('id') id: string) {
     return await this.membersService.read(id);
   }
+  @Get()
+  async getMany(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.membersService.readMany(page, take, queryParams);
+  }
 
-  @Put(':id')
+  @Put('/:id/is-bereaved')
+  async updateToBereaved(
+    @Param('id') id: string,
+    @Body() payload: Partial<BereavedMemberDto>,
+    @GetUser() initiator: User,
+  ) {
+    await this.membersService.updateToBereaved(id, payload);
+  }
+
+  @Put('/:id')
   async update(
     @Param('id') id: string,
     @Body() payload: Partial<MemberDto>,

@@ -6,6 +6,8 @@ import {
   IsArray,
   IsObject,
   IsEnum,
+  IsOptional,
+  IsString,
 } from 'class-validator';
 import { ChildDto, SpouseDto } from '.';
 import { Member, Membership } from '../entities';
@@ -36,6 +38,7 @@ export class MemberDto extends UserDto {
 }
 
 export class SearchQueryDto {
-  @IsEnum(Membership)
-  membership: Membership;
+  @IsOptional()
+  @IsString()
+  membership: string;
 }

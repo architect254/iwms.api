@@ -37,7 +37,7 @@ export class Member extends User {
   @ManyToOne(() => Welfare, (welfare) => welfare.members, { eager: true })
   welfare: Welfare;
 
-  @Column()
+  @Column({ nullable: true })
   welfareId: string;
 
   @OneToMany(() => Contribution, (from) => from.from)
@@ -50,7 +50,7 @@ export class Member extends User {
   @JoinColumn()
   spouse: Spouse;
 
-  @Column()
+  @Column({ nullable: true })
   spouseId: string;
 
   @OneToMany(() => Child, (children) => children.parent, { eager: true })

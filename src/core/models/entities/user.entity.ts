@@ -19,9 +19,6 @@ export abstract class User {
   @Column()
   name: string;
 
-  @Column({ default: 'random' })
-  random: string;
-
   @Column({
     type: 'enum',
     enum: Gender,
