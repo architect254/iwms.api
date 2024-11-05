@@ -1,5 +1,6 @@
 db:
   host: 'localhost'
+  database: 'iwms'
   username: 'iwms_client_user'
   password: 'password'
   synchronize: true
