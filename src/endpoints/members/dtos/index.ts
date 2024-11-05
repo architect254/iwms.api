@@ -1,7 +1,6 @@
 export { MemberDto, SearchQueryDto } from './member.dto';
-export { BereavedMemberDto } from './bereaved-member.dto';
-export { UpdateToBereavedMemberDto } from './update-to-bereaved-member.dto';
-export { DeceasedMemberDto } from './deceased-member.dto';
-export { DeactivatedMemberDto } from './deactivated-member.dto';
+export { IsBereavedMemberDto } from './is-bereaved-member.dto';
+export { IsDeceasedMemberDto } from './is-deceased-member.dto';
+export { IsDeactivatedMemberDto } from './is-deactivated-member.dto';
 export { SpouseDto } from './spouse.dto';
 export { ChildDto } from './child.dto';

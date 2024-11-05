@@ -31,21 +31,24 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToOne(() => Member, (chairperson) => chairperson.welfare)
+  @OneToOne(() => Member, (chairperson) => chairperson.welfare, {
+    cascade: true,
+  })
   @JoinColumn()
   chairperson: Member;
 
-  @OneToOne(() => Member, (treasurer) => treasurer.welfare)
+  @OneToOne(() => Member, (treasurer) => treasurer.welfare, { cascade: true })
   @JoinColumn()
   treasurer: Member;
 
-  @OneToOne(() => Member, (secretary) => secretary.welfare)
+  @OneToOne(() => Member, (secretary) => secretary.welfare, { cascade: true })
   @JoinColumn()
   secretary: Member;
 
   @OneToMany(
     () => Member || BereavedMember || DeceasedMember || DeactivatedMember,
     (members) => members.welfare,
+    { cascade: true },
   )
   members: (Member | BereavedMember | DeceasedMember | DeactivatedMember)[];
 

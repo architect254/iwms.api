@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-// import { hash,genSalt } from 'crypto';
 import { hash, genSalt } from 'bcrypt';
 import { Repository, EntityManager } from 'typeorm';
 
@@ -15,10 +14,9 @@ import {
 } from './entities';
 import {
   MemberDto,
-  BereavedMemberDto,
-  DeactivatedMemberDto,
-  DeceasedMemberDto,
-  UpdateToBereavedMemberDto,
+  IsDeceasedMemberDto,
+  IsBereavedMemberDto,
+  IsDeactivatedMemberDto,
 } from './dtos';
 import { Welfare } from '../welfares/welfare.entity';
 import { SearchQueryDto } from './dtos/member.dto';
@@ -49,7 +47,6 @@ export class MembersService {
         where: { id },
         relations: { spouse: true, children: true, welfare: true },
       });
-      console.log('member 0', member);
 
       if (!member) {
         member = await this.bereavedMemberRepo.findOne({
@@ -57,7 +54,6 @@ export class MembersService {
           relations: { spouse: true, children: true, welfare: true },
         });
       }
-      console.log('member 1', member);
 
       if (!member) {
         member = await this.deceasedMemberRepo.findOne({
@@ -65,7 +61,6 @@ export class MembersService {
           relations: { spouse: true, children: true, welfare: true },
         });
       }
-      console.log('member 2', member);
 
       if (!member) {
         member = await this.deactivatedMemberRepo.findOne({
@@ -73,7 +68,6 @@ export class MembersService {
           relations: { spouse: true, children: true, welfare: true },
         });
       }
-      console.log('member 3', member);
 
       return member;
     } catch (error) {
@@ -94,67 +88,39 @@ export class MembersService {
       | DeactivatedMember
     )[];
     const { membership } = searchQueryParams;
-    try {
-      switch (membership) {
-        case Membership.Active:
-          members = await this.memberRepo.find({
-            skip,
-            take,
-          });
-          break;
+    switch (membership) {
+      case Membership.Bereaved:
+        members = await this.bereavedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true },
+        });
+        break;
 
-        case Membership.Bereaved:
-          members = await this.bereavedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
+      case Membership.Deceased:
+        members = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true },
+        });
+        break;
 
-        case Membership.Deceased:
-          members = await this.deceasedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
-
-        case Membership.Deactivated:
-          members = await this.deactivatedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
-        default:
-          const [
-            activeMembers,
-            bereavedMembers,
-            deceasedMembers,
-            deactivatedMembers,
-          ] = await Promise.all([
-            this.memberRepo.find({ skip, take }),
-            this.bereavedMemberRepo.find({ skip, take }),
-            this.deceasedMemberRepo.find({ skip, take }),
-            this.deactivatedMemberRepo.find({ skip, take }),
-          ]);
-
-          members = [
-            ...activeMembers,
-            ...bereavedMembers,
-            ...deceasedMembers,
-            ...deactivatedMembers,
-          ];
-          console.log(
-            'all membership',
-            activeMembers,
-            bereavedMembers,
-            deceasedMembers,
-            deactivatedMembers,
-          );
-
-          break;
-      }
-    } catch (error) {
-      throw new Error(error);
+      case Membership.Deactivated:
+        members = await this.deactivatedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true },
+        });
+        break;
+      default:
+        members = await this.memberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true },
+        });
+        break;
     }
+
     return members;
   }
 
@@ -162,51 +128,115 @@ export class MembersService {
     id: string,
     page: number,
     take: number,
+    searchQueryParams?: SearchQueryDto,
   ): Promise<Member[]> {
     const skip: number = Number(take * (page - 1));
+    let members: (
+      | Member
+      | BereavedMember
+      | DeceasedMember
+      | DeactivatedMember
+    )[];
+    const { membership } = searchQueryParams;
+    switch (membership) {
+      case Membership.Bereaved:
+        members = await this.bereavedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true },
+        });
+        break;
 
-    let members: Member[];
+      case Membership.Deceased:
+        members = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true },
+        });
+        break;
 
-    try {
-      members = await this.memberRepo.find({
-        skip,
-        take,
-        where: { welfareId: id },
-        relations: {
-          spouse: true,
-          children: true,
-        },
-      });
-      return members;
-    } catch (error) {
-      throw new Error(error);
+      case Membership.Deactivated:
+        members = await this.deactivatedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true },
+        });
+        break;
+      default:
+        members = await this.memberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true },
+        });
+        break;
     }
+
+    return members;
   }
 
   async update(id, payload: Partial<MemberDto>): Promise<Member> {
     return this.upsert(payload, id);
   }
 
-  async updateToBereaved(id, payload: UpdateToBereavedMemberDto) {
+  async isBereaved(id, payload: IsBereavedMemberDto) {
     return this.bereavedMemberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        try {
-          if (id) {
-            const bereavedMember = Object.assign(
-              new BereavedMember(),
-              payload,
-              {
-                membership: Membership.Bereaved,
-              },
-            );
-            await transactionEntityManager.update(
-              Member,
-              { id },
-              bereavedMember,
-            );
-          }
-        } catch (error) {
-          throw new Error(error);
+        if (id) {
+          const bereavedMember = Object.assign(new BereavedMember(), payload, {
+            membership: Membership.Bereaved,
+          });
+          await transactionEntityManager.update(Member, { id }, bereavedMember);
+        }
+      },
+    );
+  }
+
+  async isDeceased(id, payload: IsDeceasedMemberDto) {
+    return this.deceasedMemberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const deceasedMember = Object.assign(new DeceasedMember(), payload, {
+            membership: Membership.Deceased,
+          });
+          await transactionEntityManager.update(Member, { id }, deceasedMember);
+        }
+      },
+    );
+  }
+
+  async isDeactivated(id, payload: IsDeactivatedMemberDto) {
+    return this.deactivatedMemberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const deactivatedMemberRepo = Object.assign(
+            new DeactivatedMember(),
+            payload,
+            {
+              membership: Membership.Deactivated,
+            },
+          );
+          await transactionEntityManager.update(
+            Member,
+            { id },
+            deactivatedMemberRepo,
+          );
+        }
+      },
+    );
+  }
+
+  async isActivated(id) {
+    return this.memberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const activeMember = Object.assign(new Member(), {
+            membership: Membership.Active,
+          });
+          await transactionEntityManager.update(Member, { id }, activeMember);
         }
       },
     );

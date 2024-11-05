@@ -3,7 +3,7 @@ import { IsString, IsDate, IsEnum } from 'class-validator';
 
 import { RelationshipWithDeceased } from '../entities';
 
-export class UpdateToBereavedMemberDto {
+export class IsBereavedMemberDto {
   @IsDate()
   @Type(() => Date)
   bereavement_date: Date;
