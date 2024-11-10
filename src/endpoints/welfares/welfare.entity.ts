@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { DeactivatedMember, DeceasedMember, Member } from '../members/entities';
 import { BereavedMember } from '../members/entities';
+import { Account } from '../finance/entities';
 
 @Entity('welfares')
 export class Welfare {
@@ -51,6 +52,27 @@ export class Welfare {
     { cascade: true },
   )
   members: (Member | BereavedMember | DeceasedMember | DeactivatedMember)[];
+
+  @OneToMany(() => Account, (accounts) => accounts.welfare)
+  accounts: Account[];
+
+  @Column({ type: 'money', default: 0 })
+  membershipContributionAmount: number;
+
+  @Column({ type: 'money', default: 0 })
+  monthlyContributionAmount: number;
+
+  @Column({ type: 'money', default: 0 })
+  bereavedMemberContributionAmount: number;
+
+  @Column({ type: 'money', default: 0 })
+  deceasedMemberContributionAmount: number;
+
+  @Column({ type: 'money', default: 0 })
+  totalContributionsAmount: number;
+
+  @Column({ type: 'money', default: 0 })
+  totalExpendituresAmount: number;
 
   @CreateDateColumn()
   create_date?: Date;

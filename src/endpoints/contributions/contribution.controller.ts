@@ -7,11 +7,20 @@ import {
   Query,
   Put,
   Delete,
+  Header,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { ContributionService } from './contribution.service';
-import { SearchQueryDto, ContributionDto } from './contribution.dto';
+import {
+  SearchQueryDto,
+  ContributionDto,
+  MembershipContributionDto,
+  MonthlyContributionDto,
+  BereavedMemberContributionDto,
+  DeceasedMemberContributionDto,
+} from './contribution.dto';
 import {
   PaginationTransformPipe,
   PaginationRequestDto,
@@ -25,37 +34,52 @@ export class ContributionController {
   constructor(private contributionService: ContributionService) {}
 
   @Post()
-  async create(@Body() payload: ContributionDto, @GetUser() initiator: User) {
+  async create(
+    @Body()
+    payload:
+      | MembershipContributionDto
+      | MonthlyContributionDto
+      | BereavedMemberContributionDto
+      | DeceasedMemberContributionDto,
+    @GetUser() initiator: User,
+  ) {
     return await this.contributionService.create(payload);
   }
 
-  @Get('/:id')
-  async get(@Param('id') id) {
-    return await this.contributionService.read(id);
+  @Get('by-member/:id')
+  async getManyByMember(
+    @Param('id') id,
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.contributionService.readManyByMemberId(
+      id,
+      page,
+      take,
+      queryParams,
+    );
   }
 
+  @Get(':id')
+  async get(@Param('id') id: string) {
+    return await this.contributionService.read(id);
+  }
   @Get()
   async getMany(
     @Query(new PaginationTransformPipe())
     paginationRequest: PaginationRequestDto,
-    @Query()
+    @Query(new ValidationPipe())
     queryParams: SearchQueryDto,
   ) {
     const { page, take } = paginationRequest;
     return await this.contributionService.readMany(page, take, queryParams);
   }
 
-  @Put('/:id')
-  async update(
-    @Param('id') id,
-    @Body() payload: ContributionDto,
-    @GetUser() initiator: User,
-  ) {
-    return await this.contributionService.update(id, payload);
-  }
-
-  @Delete('/:id')
-  async delete(@Param('id') id) {
+  @Delete(':id')
+  async delete(@Param('id') id: string) {
     await this.contributionService.drop(id);
   }
 }

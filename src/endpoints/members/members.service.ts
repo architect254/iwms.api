@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { hash, genSalt } from 'bcrypt';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, ILike, Like } from 'typeorm';
 
 import {
   Member,
@@ -38,41 +38,76 @@ export class MembersService {
     return this.upsert(payload);
   }
 
-  async read(id: string): Promise<Member> {
+  async read(id: string): Promise<Member | BereavedMember | DeceasedMember | DeactivatedMember> {
     let member: Member | BereavedMember | DeceasedMember | DeactivatedMember =
       null;
-    console.log('here', id);
-    try {
-      member = await this.memberRepo.findOne({
+    member = await this.memberRepo.findOne({
+      where: { id },
+      relations: {
+        spouse: true,
+        children: true,
+        welfare: true,
+        contributions: true,
+      },
+    });
+
+    if (!member) {
+      member = await this.bereavedMemberRepo.findOne({
         where: { id },
-        relations: { spouse: true, children: true, welfare: true },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
+      });
+    }
+
+    if (!member) {
+      member = await this.deceasedMemberRepo.findOne({
+        where: { id },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
+      });
+    }
+
+    if (!member) {
+      member = await this.deactivatedMemberRepo.findOne({
+        where: { id },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
+      });
+    }
+
+    return member;
+  }
+
+  async search(page: number = 1, take: number = 100, name: string) {
+    const skip: number = Number(take * (page - 1));
+    let members;
+
+    members = await this.memberRepo
+      .find({
+        skip,
+        take,
+        where: { name: ILike(`%${name}%`) },
+      })
+      .then((members) => {
+        return members.map((member) => {
+          const { id, id_number, name } = member;
+          return { id, name: `${name} (${id_number})` };
+        });
       });
 
-      if (!member) {
-        member = await this.bereavedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-
-      if (!member) {
-        member = await this.deceasedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-
-      if (!member) {
-        member = await this.deactivatedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-
-      return member;
-    } catch (error) {
-      throw new Error(error);
-    }
+    return members;
   }
 
   async readMany(
@@ -93,7 +128,7 @@ export class MembersService {
         members = await this.bereavedMemberRepo.find({
           skip,
           take,
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
 
@@ -101,7 +136,7 @@ export class MembersService {
         members = await this.deceasedMemberRepo.find({
           skip,
           take,
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
 
@@ -109,14 +144,14 @@ export class MembersService {
         members = await this.deactivatedMemberRepo.find({
           skip,
           take,
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
       default:
         members = await this.memberRepo.find({
           skip,
           take,
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true, },
         });
         break;
     }
@@ -144,7 +179,7 @@ export class MembersService {
           skip,
           take,
           where: { welfareId: id },
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
 
@@ -153,7 +188,7 @@ export class MembersService {
           skip,
           take,
           where: { welfareId: id },
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
 
@@ -162,7 +197,7 @@ export class MembersService {
           skip,
           take,
           where: { welfareId: id },
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
       default:
@@ -170,7 +205,7 @@ export class MembersService {
           skip,
           take,
           where: { welfareId: id },
-          relations: { spouse: true, children: true },
+          relations: { spouse: true, children: true, contributions: true },
         });
         break;
     }
@@ -217,6 +252,7 @@ export class MembersService {
             payload,
             {
               membership: Membership.Deactivated,
+              deactivation_date: new Date(Date.now()),
             },
           );
           await transactionEntityManager.update(
@@ -229,7 +265,7 @@ export class MembersService {
     );
   }
 
-  async isActivated(id) {
+  async activate(id) {
     return this.memberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
         if (id) {
@@ -247,76 +283,65 @@ export class MembersService {
 
     return this.memberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        try {
-          if (id) {
-            member = await transactionEntityManager.findOneBy<
-              Member | BereavedMember | DeceasedMember | DeactivatedMember
-            >(Member, {
-              id,
-            });
-          } else {
-            member = await transactionEntityManager.create(Member);
-          }
-
-          const { welfareDto, spouseDto, childrenDto } = payload as MemberDto;
-
-          if (welfareDto) {
-            if (member?.welfare) {
-              welfare = member?.welfare;
-            } else {
-              welfare = new Welfare();
-              welfare.members = [];
-              welfare = await transactionEntityManager.create(Welfare, welfare);
-            }
-
-            Object.assign(welfare, welfareDto);
-
-            member.welfare = await transactionEntityManager.save(welfare);
-          }
-
-          if (spouseDto) {
-            if (member?.spouse) {
-              spouse = member?.spouse;
-            } else {
-              spouse = new Spouse();
-              spouse = await transactionEntityManager.create(Spouse, spouse);
-            }
-
-            Object.assign(spouse, spouseDto);
-
-            member.spouse = await transactionEntityManager.save(spouse);
-          }
-
-          if (childrenDto) {
-            if (member?.children?.length) {
-              children = member?.children;
-            } else {
-              children = new Array<Child>(childrenDto.length).fill(new Child());
-              children = await transactionEntityManager.create(Child, children);
-            }
-            for (let index = 0; index < childrenDto.length; index++) {
-              Object.assign(children[index], childrenDto[index]);
-            }
-
-            member.children = await transactionEntityManager.save(children);
-          }
-
-          /**
-           *
-           * Assigns payload data to UserAccount Object
-           *
-           */
-          Object.assign(member, payload);
-
-          member.salt = await genSalt();
-          member.password = await hash('Password@123', member.salt);
-
-          member = await transactionEntityManager.save(member);
-
-          delete member.password && delete member.salt;
-        } catch (error) {
-          throw new Error(error);
+        if (id) {
+          member = await transactionEntityManager.findOneBy<
+            Member | BereavedMember | DeceasedMember | DeactivatedMember
+          >(Member, {
+            id,
+          });
+        } else {
+          member = await transactionEntityManager.create(Member);
         }
+
+        const { welfareId, spouseDto, childrenDto } = payload as MemberDto;
+
+        if (welfareId) {
+          member.welfare = await transactionEntityManager.findOneBy(Welfare, {
+            id: welfareId,
+          });
+        }
+
+        if (spouseDto) {
+          if (member?.spouse) {
+            spouse = member?.spouse;
+          } else {
+            spouse = new Spouse();
+            spouse = await transactionEntityManager.create(Spouse, spouse);
+          }
+
+          Object.assign(spouse, spouseDto);
+
+          member.spouse = await transactionEntityManager.save(spouse);
+        }
+
+        if (childrenDto) {
+          if (member?.children?.length) {
+            children = member?.children;
+          } else {
+            children = new Array<Child>(childrenDto.length).fill(new Child());
+            children = await transactionEntityManager.create(Child, children);
+          }
+          for (let index = 0; index < childrenDto.length; index++) {
+            Object.assign(children[index], childrenDto[index]);
+          }
+
+          member.children = await transactionEntityManager.save(children);
+        }
+
+        /**
+         *
+         * Assigns payload data to UserAccount Object
+         *
+         */
+        Object.assign(member, payload);
+
+        member.salt = await genSalt();
+        member.password = await hash('Password@123', member.salt);
+
+        member = await transactionEntityManager.save(member);
+
+        delete member.password && delete member.salt;
+
         return member;
       },
     );

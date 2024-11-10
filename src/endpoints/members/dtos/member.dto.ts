@@ -10,31 +10,26 @@ import {
   IsString,
 } from 'class-validator';
 import { ChildDto, SpouseDto } from '.';
-import { Member, Membership } from '../entities';
-import { WelfareDto } from '../../welfares/welfare.dto';
+import { Membership } from '../entities';
 import { UserDto } from 'src/core/models/dtos/user.dto';
 
 export class MemberDto extends UserDto {
   @IsEnum(Membership)
   membership: Membership;
 
-  @ValidateIf((member: Member) => member.membership == Membership.Active)
-  @IsNotEmptyObject()
+  @IsString()
+  welfareId: string;
+
+  @IsOptional()
   @ValidateNested()
   @Type(() => SpouseDto)
   spouseDto: SpouseDto;
 
-  @ValidateIf((member: Member) => member.membership == Membership.Active)
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => ChildDto)
   childrenDto: ChildDto[];
-
-  @ValidateIf((member: Member) => member.membership == Membership.Active)
-  @IsObject()
-  @ValidateNested()
-  @Type(() => WelfareDto)
-  welfareDto: WelfareDto;
 }
 
 export class SearchQueryDto {

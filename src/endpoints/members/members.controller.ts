@@ -39,6 +39,21 @@ export class MembersController {
     return await this.membersService.create(payload);
   }
 
+  @Get('search')
+  async search(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query('name')
+    name: string,
+  ) {
+    const { page, take } = paginationRequest;
+    if (name.includes('(')) {
+      name = name.split('(')[0];
+    }
+    name = name.trim();
+    return await this.membersService.search(page, take, name);
+  }
+
   @Get('by-welfare/:id')
   async getManyByWelfare(
     @Param('id') id,
@@ -60,6 +75,7 @@ export class MembersController {
   async get(@Param('id') id: string) {
     return await this.membersService.read(id);
   }
+
   @Get()
   async getMany(
     @Query(new PaginationTransformPipe())
@@ -101,10 +117,9 @@ export class MembersController {
     return await this.membersService.isDeactivated(id, payload);
   }
 
-  @Put(':id/is-activated')
-  @Header('content-type', 'application/json')
+  @Put(':id/activate')
   async IsActivated(@Param('id') id: string, @GetUser() initiator: User) {
-    return await this.membersService.isActivated(id);
+    return await this.membersService.activate(id);
   }
 
   @Put(':id')

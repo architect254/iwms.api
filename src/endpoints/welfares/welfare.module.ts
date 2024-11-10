@@ -3,30 +3,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { WelfareController } from './welfare.controller';
 import { WelfareService } from './welfare.service';
-import {
-  Member,
-  BereavedMember,
-  Child,
-  DeactivatedMember,
-  DeceasedMember,
-  Spouse,
-} from '../members/entities';
 import { Welfare } from './welfare.entity';
+import { MembersModule } from '../members/members.module';
+import { ContributionModule } from '../contributions/contribution.module';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Member,
-      BereavedMember,
-      DeceasedMember,
-      DeactivatedMember,
-      Spouse,
-      Child,
-      Welfare,
-    ]),
-  ],
+  imports: [TypeOrmModule.forFeature([Welfare]), ContributionModule],
   controllers: [WelfareController],
   providers: [WelfareService],
-  exports: [WelfareService, TypeOrmModule],
+  exports: [WelfareService, TypeOrmModule, ContributionModule],
 })
 export class WelfareModule {}
