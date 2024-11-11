@@ -9,10 +9,10 @@ class AccountDto {
   name: string;
 
   @IsString()
-  welfareId: string;
+  welfareName: string;
 
   @IsCurrency({ allow_decimal: false, allow_negatives: false })
-  baseAmount: number;
+  base_amount: number;
 }
 export class BankAccountDto extends AccountDto {
   @IsString()

@@ -16,6 +16,7 @@ import { User } from 'src/core/models/entities/user.entity';
 
 export enum Membership {
   Active = 'Active',
+  Member = 'Member',
   Bereaved = 'Bereaved',
   Deceased = 'Deceased',
   Deactivated = 'Deactivated',

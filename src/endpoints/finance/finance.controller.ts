@@ -26,7 +26,7 @@ import {
 import { BankAccountDto, PettyCashAccountDto } from './dtos/account.dto';
 
 // @UseGuards(AuthGuard('jwt'))
-@Controller('finance')
+@Controller('finances')
 export class FinanceController {
   constructor(private financeService: FinanceService) {}
 
@@ -36,6 +36,17 @@ export class FinanceController {
     @GetUser() initiator: User,
   ) {
     return await this.financeService.createAccount(payload);
+  }
+
+  @Get('accounts')
+  async getManyAccounts(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.financeService.readManyAccounts(page, take, queryParams);
   }
 
   @Get('accounts/by-welfare/:id')
@@ -56,20 +67,9 @@ export class FinanceController {
     );
   }
 
-  @Get('acounts/:id')
+  @Get('accounts/:id')
   async getAccount(@Param('id') id: string) {
     return await this.financeService.readAccount(id);
-  }
-
-  @Get('accounts')
-  async getManyAccounts(
-    @Query(new PaginationTransformPipe())
-    paginationRequest: PaginationRequestDto,
-    @Query(new ValidationPipe())
-    queryParams: SearchQueryDto,
-  ) {
-    const { page, take } = paginationRequest;
-    return await this.financeService.readManyAccounts(page, take, queryParams);
   }
 
   @Post('expenditures')

@@ -15,6 +15,10 @@ import { WelfareService } from './welfare.service';
 import { WelfareDto } from './welfare.dto';
 import { GetUser } from 'src/core/decorators/get-user.decorator';
 import { User } from 'src/core/models/entities/user.entity';
+import {
+  PaginationTransformPipe,
+  PaginationRequestDto,
+} from 'src/core/models/dtos/pagination-request.dto';
 
 // @UseGuards(AuthGuard('jwt'))
 @Controller('welfares')
@@ -32,6 +36,17 @@ export class WelfareController {
     @Query('take', ParseIntPipe) take: number,
   ) {
     return await this.welfareService.readMany(page, take);
+  }
+
+  @Get('search')
+  async search(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query('name')
+    name: string,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.welfareService.search(page, take, name);
   }
 
   @Get('/:id')

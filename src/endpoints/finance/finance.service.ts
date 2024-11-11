@@ -49,13 +49,28 @@ export class FinanceService {
     queryParams: SearchQueryDto,
   ) {
     const skip: number = Number(take * (page - 1));
-    let accounts: Account[];
-    accounts = await this.accountRepo.find({
-      skip,
-      take,
-      relations: { welfare: true, contributions: true },
-    });
+    let accounts: (BankAccount | PettyCashAccount)[];
+    let { type } = queryParams;
+    type = type as AccountType;
+    switch (type) {
+      case AccountType.Bank:
+        accounts = await this.bankAccountRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { welfare: true },
+        });
+        break;
 
+      case AccountType.PettyCash:
+        accounts = await this.pettyCashAccountRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { welfare: true },
+        });
+        break;
+    }
     return accounts;
   }
   async readAccount(id: string) {
@@ -99,7 +114,7 @@ export class FinanceService {
         });
         break;
 
-      case AccountType.PetyCash:
+      case AccountType.PettyCash:
         accounts = await this.pettyCashAccountRepo.find({
           skip,
           take,
@@ -122,11 +137,23 @@ export class FinanceService {
           account = await transactionEntityManager.create(BankAccount);
 
           (account as BankAccount).number = number;
-        } else if (type == AccountType.PetyCash) {
+        } else if (type == AccountType.PettyCash) {
           account = await transactionEntityManager.create(PettyCashAccount);
         }
 
         Object.assign(account, payload);
+
+        const { base_amount } = payload;
+        account.current_amount = base_amount;
+        account.contributions = [];
+        account.expenditures = [];
+
+        const { welfareName } = payload;
+        const welfare = await transactionEntityManager.findOne(Welfare, {
+          where: { name: welfareName },
+        });
+
+        account.welfare = welfare;
 
         account = await transactionEntityManager.save(account);
 

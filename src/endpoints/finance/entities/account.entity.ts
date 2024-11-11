@@ -15,7 +15,7 @@ import { Expenditure } from './expenditure.entity';
 
 export enum AccountType {
   Bank = 'Bank',
-  PetyCash = 'Petty Cash',
+  PettyCash = 'Petty Cash',
 }
 
 @Entity('accounts')
@@ -32,10 +32,10 @@ export abstract class Account {
   @Column()
   name: string;
 
-  @Column({ type: 'money' })
+  @Column({ type: 'money', default: 0 })
   base_amount: number;
 
-  @Column({ type: 'money' })
+  @Column({ type: 'money', default: 0 })
   current_amount: number;
 
   @ManyToOne(() => Welfare, (welfare) => welfare.members, { eager: true })
@@ -62,5 +62,5 @@ export class BankAccount extends Account {
   number: string;
 }
 
-@ChildEntity(AccountType.PetyCash)
+@ChildEntity(AccountType.PettyCash)
 export class PettyCashAccount extends Account {}

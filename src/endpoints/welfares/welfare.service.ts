@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, ILike, Repository } from 'typeorm';
 import { hash, genSalt } from 'bcrypt';
 
 import { Welfare } from './welfare.entity';
@@ -60,6 +60,26 @@ export class WelfareService {
         members: true,
       },
     });
+    return welfares;
+  }
+
+  async search(page: number = 1, take: number = 100, name: string) {
+    const skip: number = Number(take * (page - 1));
+    let welfares;
+
+    welfares = await this.welfareRepo
+      .find({
+        skip,
+        take,
+        where: { name: ILike(`%${name}%`) },
+      })
+      .then((welfares) => {
+        return welfares.map((welfare) => {
+          const { id, name } = welfare;
+          return { id, name };
+        });
+      });
+
     return welfares;
   }
 
