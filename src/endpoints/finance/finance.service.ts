@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager, ILike, Repository } from 'typeorm';
 import { SearchQueryDto } from './finance.dto';
 import { Account, Expenditure } from './entities';
 import { UpdateContributionAmountDto } from './dtos';
@@ -295,7 +295,7 @@ export class FinanceService {
 
     return this.expenditureRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        const { type, fromAccountId } = payload;
+        const { type, fromAccountName, amount } = payload;
 
         if (type == ExpenditureType.InternalFundsTransfer) {
           const { toAccountId } =
@@ -305,26 +305,30 @@ export class FinanceService {
             InternalFundsTransferExpenditure,
           );
 
+          Object.assign(expenditure, payload);
+
           expenditure.to = await transactionEntityManager.findOne(Account, {
             where: { id: toAccountId },
           });
+          expenditure.to.current_amount =
+            Number(expenditure.to.current_amount) + Number(amount);
+          await transactionEntityManager.save(expenditure.to);
         } else {
-          const { toAccountNumber } =
-            payload as ExternalFundsTransferExpenditureDto;
+          const { toAccount } = payload as ExternalFundsTransferExpenditureDto;
           expenditure = await transactionEntityManager.create(
             ExternalFundsTransferExpenditure,
           );
-          expenditure.to = toAccountNumber;
+          Object.assign(expenditure, payload);
+
+          expenditure.to = toAccount;
         }
 
-        Object.assign(expenditure, payload);
-
         expenditure.from = await transactionEntityManager.findOne(Account, {
-          where: { id: fromAccountId },
+          where: { name: fromAccountName },
         });
 
         expenditure.from.current_amount =
-          expenditure.from.current_amount - payload.amount;
+          Number(expenditure.from.current_amount) - Number(amount);
 
         await transactionEntityManager.save(expenditure.from);
 
@@ -333,10 +337,7 @@ export class FinanceService {
         });
 
         welfare.totalExpendituresAmount =
-          welfare.totalExpendituresAmount + payload.amount;
-
-        welfare.totalContributionsAmount =
-          welfare.totalContributionsAmount - payload.amount;
+          Number(welfare.totalExpendituresAmount) + Number(amount);
 
         await transactionEntityManager.save(welfare);
 
@@ -345,5 +346,25 @@ export class FinanceService {
         return expenditure;
       },
     );
+  }
+
+  async search(page: number = 1, take: number = 100, name: string) {
+    const skip: number = Number(take * (page - 1));
+    let accounts;
+
+    accounts = await this.accountRepo
+      .find({
+        skip,
+        take,
+        where: { name: ILike(`%${name}%`) },
+      })
+      .then((accounts) => {
+        return accounts.map((account) => {
+          const { id, name } = account;
+          return { id, name };
+        });
+      });
+
+    return accounts;
   }
 }

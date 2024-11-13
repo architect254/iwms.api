@@ -29,13 +29,13 @@ export abstract class Account {
   @Column({ type: 'enum', enum: AccountType })
   type: AccountType;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({ default: 0 })
   base_amount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({default: 0 })
   current_amount: number;
 
   @ManyToOne(() => Welfare, (welfare) => welfare.members, { eager: true })

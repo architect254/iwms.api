@@ -56,22 +56,22 @@ export class Welfare {
   @OneToMany(() => Account, (accounts) => accounts.welfare)
   accounts: Account[];
 
-  @Column({ type: 'money', default: 0 })
+  @Column({ default: 0 })
   membershipContributionAmount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({ default: 0 })
   monthlyContributionAmount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({ default: 0 })
   bereavedMemberContributionAmount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({ default: 0 })
   deceasedMemberContributionAmount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({  default: 0 })
   totalContributionsAmount: number;
 
-  @Column({ type: 'money', default: 0 })
+  @Column({  default: 0 })
   totalExpendituresAmount: number;
 
   @CreateDateColumn()

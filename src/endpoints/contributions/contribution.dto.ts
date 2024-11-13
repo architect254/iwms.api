@@ -34,7 +34,7 @@ export class ContributionDto {
 
   @IsOptional()
   @IsString()
-  accountId: string;
+  accountName: string;
 }
 
 export class MonthlyContributionDto extends ContributionDto {
@@ -59,5 +59,6 @@ export class DeceasedMemberContributionDto extends ContributionDto {
 export class MembershipReactivationContributionDto extends ContributionDto {}
 
 export class SearchQueryDto {
+  @IsString()
   type: string;
 }

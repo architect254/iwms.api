@@ -18,7 +18,13 @@ import {
   MembershipReactivationContribution,
   MonthlyContribution,
 } from './contribution.entity';
-import { Member, BereavedMember } from '../members/entities';
+import {
+  Member,
+  BereavedMember,
+  DeceasedMember,
+  DeactivatedMember,
+  Membership,
+} from '../members/entities';
 import { Account } from '../finance/entities';
 import { Welfare } from '../welfares/welfare.entity';
 
@@ -61,7 +67,7 @@ export class ContributionService {
 
     return this.contributionRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        const { memberId, amount, type, accountId } = payload;
+        let { memberId, amount, type, accountName } = payload;
         switch (type as ContributionType) {
           case ContributionType.Membership:
             contribution = await transactionEntityManager.create(
@@ -79,16 +85,24 @@ export class ContributionService {
             contribution = await transactionEntityManager.create(
               BereavedMemberContribution,
             );
-            const { bereavedMemberId } =
-              payload as BereavedMemberContributionDto;
+            let { bereavedMemberId } = payload as BereavedMemberContributionDto;
+
             if (bereavedMemberId) {
-              let id_number = memberId.split('(').pop()?.split(')').shift();
+              if (bereavedMemberId.includes('(')) {
+                bereavedMemberId = bereavedMemberId.split('(')[1];
+              }
+              bereavedMemberId = bereavedMemberId.trim();
+              if (bereavedMemberId.includes(')')) {
+                bereavedMemberId = bereavedMemberId.split(')')[0];
+              }
+              const id_number = bereavedMemberId.trim();
               const member = await transactionEntityManager.findOne(
                 BereavedMember,
                 {
                   where: { id_number },
                 },
               );
+
               (contribution as BereavedMemberContribution).bereavedMember =
                 member;
             }
@@ -97,25 +111,76 @@ export class ContributionService {
             contribution = await transactionEntityManager.create(
               DeceasedMemberContribution,
             );
-            const { deceasedMemberId } =
-              payload as DeceasedMemberContributionDto;
+            let { deceasedMemberId } = payload as DeceasedMemberContributionDto;
             if (deceasedMemberId) {
-              let id_number = memberId.split('(').pop()?.split(')').shift();
+              if (deceasedMemberId.includes('(')) {
+                deceasedMemberId = deceasedMemberId.split('(')[1];
+              }
+              deceasedMemberId = deceasedMemberId.trim();
+              if (deceasedMemberId.includes(')')) {
+                deceasedMemberId = deceasedMemberId.split(')')[0];
+              }
+              const id_number = deceasedMemberId.trim();
               const member = await transactionEntityManager.findOne(
-                BereavedMember,
+                DeceasedMember,
                 {
                   where: { id_number },
                 },
               );
-              (contribution as BereavedMemberContribution).bereavedMember =
+              (contribution as DeceasedMemberContribution).deceasedMember =
                 member;
             }
             break;
+          case ContributionType.MembershipReactivation:
+            contribution = await transactionEntityManager.create(
+              MembershipReactivationContribution,
+            );
+
+            if (memberId.includes('(')) {
+              memberId = memberId.split('(')[1];
+            }
+            memberId = memberId.trim();
+            if (memberId.includes(')')) {
+              memberId = memberId.split(')')[0];
+            }
+            const id_number = memberId.trim();
+            const member = await transactionEntityManager.findOne(
+              DeactivatedMember,
+              {
+                where: { id_number },
+              },
+            );
+
+            contribution.member = member;
+
+            this.memberRepo.manager.transaction(
+              async (transactionEntityManager: EntityManager) => {
+                if (member.id) {
+                  const activeMember = Object.assign(new Member(), {
+                    membership: Membership.Active,
+                  });
+                  await transactionEntityManager.update(
+                    Member,
+                    { id: member.id },
+                    activeMember,
+                  );
+                }
+              },
+            );
+            break;
         }
 
-        if (memberId) {
-          let id_number = memberId.split('(').pop()?.split(')').shift();
-          const member = await transactionEntityManager.findOne(Member, {
+        if (memberId && type != ContributionType.MembershipReactivation) {
+          if (memberId.includes('(')) {
+            memberId = memberId.split('(')[1];
+          }
+          memberId = memberId.trim();
+          if (memberId.includes(')')) {
+            memberId = memberId.split(')')[0];
+          }
+          const id_number = memberId.trim();
+          let member;
+          member = await transactionEntityManager.findOne(Member, {
             where: { id_number },
           });
           contribution.member = member;
@@ -125,11 +190,11 @@ export class ContributionService {
         contribution.amount = amount;
 
         contribution.account = await transactionEntityManager.findOne(Account, {
-          where: { id: accountId },
+          where: { name: accountName },
         });
 
         contribution.account.current_amount =
-          contribution.account.current_amount + amount;
+          Number(contribution.account.current_amount) + Number(amount);
 
         await transactionEntityManager.save(contribution.account);
 
@@ -138,66 +203,65 @@ export class ContributionService {
         });
 
         welfare.totalContributionsAmount =
-          welfare.totalContributionsAmount + amount;
+          Number(welfare.totalContributionsAmount) + Number(amount);
 
         await transactionEntityManager.save(welfare);
 
         contribution = await transactionEntityManager.save(contribution);
-
         return contribution;
       },
     );
   }
 
-  async read(id: string): Promise<Contribution> {
-    let contribution:
-      | Contribution
-      | MembershipContribution
-      | MonthlyContribution
-      | BereavedMemberContribution
-      | DeceasedMemberContribution
-      | MembershipReactivationContribution = null;
-    contribution = await this.contributionRepo.findOne({
-      where: { id },
-      relations: { member: true },
-    });
-
-    if (!contribution) {
-      contribution = await this.membershipContributionRepo.findOne({
+  async read(
+    id: string,
+  ): Promise<
+    | MembershipContribution
+    | MonthlyContribution
+    | BereavedMemberContribution
+    | DeceasedMemberContribution
+    | MembershipReactivationContribution
+  > {
+    return await this.contributionRepo
+      .findOne({
         where: { id },
-        relations: { member: true },
+        relations: { member: true, account: true },
+      })
+      .then(async (contribution) => {
+        switch (contribution.type) {
+          case ContributionType.Membership:
+            contribution = await this.membershipContributionRepo.findOne({
+              where: { id },
+              relations: { member: true, account: true },
+            });
+            return contribution;
+          case ContributionType.Monthly:
+            contribution = await this.monthlyContributionRepo.findOne({
+              where: { id },
+              relations: { member: true, account: true },
+            });
+            return contribution;
+          case ContributionType.BereavedMember:
+            contribution = await this.bereavedMemberContributionRep.findOne({
+              where: { id },
+              relations: { member: true, bereavedMember: true, account: true },
+            });
+            return contribution;
+          case ContributionType.DeceasedMember:
+            contribution = await this.deceasedMemberRepo.findOne({
+              where: { id },
+              relations: { member: true, deceasedMember: true, account: true },
+            });
+            return contribution;
+          case ContributionType.MembershipReactivation:
+            contribution =
+              await this.membershipReactivationContributionRepo.findOne({
+                where: { id },
+                relations: { member: true, account: true },
+              });
+            return contribution;
+        }
       });
-    }
-
-    if (!contribution) {
-      contribution = await this.monthlyContributionRepo.findOne({
-        where: { id },
-        relations: { member: true },
-      });
-    }
-
-    if (!contribution) {
-      contribution = await this.bereavedMemberContributionRep.findOne({
-        where: { id },
-        relations: { member: true, bereavedMember: true },
-      });
-    }
-
-    if (!contribution) {
-      contribution = await this.deceasedMemberRepo.findOne({
-        where: { id },
-        relations: { member: true, deceasedMember: true },
-      });
-    }
-
-    if (!contribution) {
-      contribution = await this.membershipReactivationContributionRepo.findOne({
-        where: { id },
-        relations: { member: true },
-      });
-    }
-
-    return contribution;
   }
 
   async readMany(
@@ -224,15 +288,17 @@ export class ContributionService {
       | MembershipReactivationContribution
     )[];
     let { type } = searchQueryParams;
-    type = type as ContributionType;
+    console.log('param type', type);
+
     switch (type) {
       case ContributionType.Membership:
         contributions = await this.membershipContributionRepo.find({
           skip,
           take,
           where: { type },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
+        console.log('memberhip contriution 0', type);
         break;
 
       case ContributionType.Monthly:
@@ -240,7 +306,7 @@ export class ContributionService {
           skip,
           take,
           where: { type },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
 
@@ -249,7 +315,7 @@ export class ContributionService {
           skip,
           take,
           where: { type },
-          relations: { member: true, bereavedMember: true },
+          relations: { member: true, account: true, bereavedMember: true },
         });
         break;
       case ContributionType.DeceasedMember:
@@ -257,7 +323,7 @@ export class ContributionService {
           skip,
           take,
           where: { type },
-          relations: { member: true, deceasedMember: true },
+          relations: { member: true, account: true, deceasedMember: true },
         });
         break;
       case ContributionType.MembershipReactivation:
@@ -265,15 +331,17 @@ export class ContributionService {
           skip,
           take,
           where: { type },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
       default:
         contributions = await this.contributionRepo.find({
           skip,
           take,
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
+        console.log('all contriution 1', type);
+
         break;
     }
 
@@ -301,7 +369,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
 
@@ -310,7 +378,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
 
@@ -319,7 +387,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true, bereavedMember: true },
+          relations: { member: true, account: true, bereavedMember: true },
         });
         break;
       case ContributionType.DeceasedMember:
@@ -327,7 +395,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true, deceasedMember: true },
+          relations: { member: true, account: true, deceasedMember: true },
         });
         break;
       case ContributionType.MembershipReactivation:
@@ -335,7 +403,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
       default:
@@ -343,7 +411,7 @@ export class ContributionService {
           skip,
           take,
           where: { member: { id } },
-          relations: { member: true },
+          relations: { member: true, account: true },
         });
         break;
     }

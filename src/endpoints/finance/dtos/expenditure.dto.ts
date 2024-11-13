@@ -3,10 +3,10 @@ import { ExpenditureType } from '../entities/expenditure.entity';
 
 class ExpenditureDto {
   @IsString()
-  fromAccountId: string;
+  fromAccountName: string;
 
   @IsString()
-  welfareId: string;
+  welfareName: string;
 
   @IsCurrency({ allow_decimal: false, allow_negatives: false })
   amount: number;
@@ -25,5 +25,5 @@ export class InternalFundsTransferExpenditureDto extends ExpenditureDto {
 
 export class ExternalFundsTransferExpenditureDto extends ExpenditureDto {
   @IsString()
-  toAccountNumber: string;
+  toAccount: string;
 }

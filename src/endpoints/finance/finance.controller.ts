@@ -38,6 +38,17 @@ export class FinanceController {
     return await this.financeService.createAccount(payload);
   }
 
+  @Get('accounts/search')
+  async search(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query('name')
+    name: string,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.financeService.search(page, take, name);
+  }
+
   @Get('accounts')
   async getManyAccounts(
     @Query(new PaginationTransformPipe())
@@ -80,6 +91,7 @@ export class FinanceController {
       | ExternalFundsTransferExpenditureDto,
     @GetUser() initiator: User,
   ) {
+    console.log('expenditure', payload);
     return await this.financeService.createExpenditure(payload);
   }
 

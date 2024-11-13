@@ -33,7 +33,7 @@ export abstract class Expenditure {
   @ManyToOne(() => Account, (from) => from.expenditures)
   from: Account;
 
-  @Column({ type: 'money' })
+  @Column({ default: 0 })
   amount: number;
 
   @Column()

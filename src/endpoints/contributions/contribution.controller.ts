@@ -46,6 +46,18 @@ export class ContributionController {
     return await this.contributionService.create(payload);
   }
 
+  @Get()
+  async getMany(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    console.log('queryparams', queryParams);
+    return await this.contributionService.readMany(page, take, queryParams);
+  }
+
   @Get('by-member/:id')
   async getManyByMember(
     @Param('id') id,
@@ -66,16 +78,6 @@ export class ContributionController {
   @Get(':id')
   async get(@Param('id') id: string) {
     return await this.contributionService.read(id);
-  }
-  @Get()
-  async getMany(
-    @Query(new PaginationTransformPipe())
-    paginationRequest: PaginationRequestDto,
-    @Query(new ValidationPipe())
-    queryParams: SearchQueryDto,
-  ) {
-    const { page, take } = paginationRequest;
-    return await this.contributionService.readMany(page, take, queryParams);
   }
 
   @Delete(':id')

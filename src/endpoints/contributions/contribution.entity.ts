@@ -35,7 +35,7 @@ export abstract class Contribution {
   })
   type: ContributionType;
 
-  @Column({ type: 'money' })
+  @Column({ default: 0 })
   amount: number;
 
   @ManyToOne(() => Member, (member) => member.contributions)
