@@ -302,6 +302,10 @@ export class WelfareService {
         welfare.treasurer = treasurer;
         welfare.secretary = secretary;
 
+        if (!id) {
+          welfare.members = [chairperson, treasurer, secretary];
+        }
+
         welfare = await transactionEntityManager.save(welfare);
         return welfare;
       },

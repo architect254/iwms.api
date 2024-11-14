@@ -296,33 +296,38 @@ export class FinanceService {
     return this.expenditureRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
         const { type, fromAccountName, amount } = payload;
+        switch (type) {
+          case ExpenditureType.InternalFundsTransfer:
+            const { toAccountId } =
+              payload as InternalFundsTransferExpenditureDto;
 
-        if (type == ExpenditureType.InternalFundsTransfer) {
-          const { toAccountId } =
-            payload as InternalFundsTransferExpenditureDto;
+            expenditure = await transactionEntityManager.create(
+              InternalFundsTransferExpenditure,
+            );
 
-          expenditure = await transactionEntityManager.create(
-            InternalFundsTransferExpenditure,
-          );
+            Object.assign(expenditure, payload);
 
-          Object.assign(expenditure, payload);
+            expenditure.to = await transactionEntityManager.findOne(Account, {
+              where: { id: toAccountId },
+            });
+            expenditure.to.current_amount =
+              Number(expenditure.to.current_amount) + Number(amount);
+            await transactionEntityManager.save(expenditure.to);
 
-          expenditure.to = await transactionEntityManager.findOne(Account, {
-            where: { id: toAccountId },
-          });
-          expenditure.to.current_amount =
-            Number(expenditure.to.current_amount) + Number(amount);
-          await transactionEntityManager.save(expenditure.to);
-        } else {
-          const { toAccount } = payload as ExternalFundsTransferExpenditureDto;
-          expenditure = await transactionEntityManager.create(
-            ExternalFundsTransferExpenditure,
-          );
-          Object.assign(expenditure, payload);
+            break;
 
-          expenditure.to = toAccount;
+          case ExpenditureType.ExternalFundsTransfer:
+            const { toAccount } =
+              payload as ExternalFundsTransferExpenditureDto;
+            expenditure = await transactionEntityManager.create(
+              ExternalFundsTransferExpenditure,
+            );
+            Object.assign(expenditure, payload);
+
+            expenditure.toAccount = toAccount;
+
+            break;
         }
-
         expenditure.from = await transactionEntityManager.findOne(Account, {
           where: { name: fromAccountName },
         });

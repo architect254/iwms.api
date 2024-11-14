@@ -57,5 +57,5 @@ export class InternalFundsTransferExpenditure extends Expenditure {
 @ChildEntity(ExpenditureType.ExternalFundsTransfer)
 export class ExternalFundsTransferExpenditure extends Expenditure {
   @Column()
-  to: string;
+  toAccount: string;
 }
