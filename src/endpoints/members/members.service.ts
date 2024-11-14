@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-// import { hash,genSalt } from 'crypto';
 import { hash, genSalt } from 'bcrypt';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, ILike, Like } from 'typeorm';
 
 import {
   Member,
@@ -15,10 +14,9 @@ import {
 } from './entities';
 import {
   MemberDto,
-  BereavedMemberDto,
-  DeactivatedMemberDto,
-  DeceasedMemberDto,
-  UpdateToBereavedMemberDto,
+  IsDeceasedMemberDto,
+  IsBereavedMemberDto,
+  IsDeactivatedMemberDto,
 } from './dtos';
 import { Welfare } from '../welfares/welfare.entity';
 import { SearchQueryDto } from './dtos/member.dto';
@@ -40,45 +38,76 @@ export class MembersService {
     return this.upsert(payload);
   }
 
-  async read(id: string): Promise<Member> {
+  async read(id: string): Promise<Member | BereavedMember | DeceasedMember | DeactivatedMember> {
     let member: Member | BereavedMember | DeceasedMember | DeactivatedMember =
       null;
-    console.log('here', id);
-    try {
-      member = await this.memberRepo.findOne({
+    member = await this.memberRepo.findOne({
+      where: { id },
+      relations: {
+        spouse: true,
+        children: true,
+        welfare: true,
+        contributions: true,
+      },
+    });
+
+    if (!member) {
+      member = await this.bereavedMemberRepo.findOne({
         where: { id },
-        relations: { spouse: true, children: true, welfare: true },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
       });
-      console.log('member 0', member);
-
-      if (!member) {
-        member = await this.bereavedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-      console.log('member 1', member);
-
-      if (!member) {
-        member = await this.deceasedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-      console.log('member 2', member);
-
-      if (!member) {
-        member = await this.deactivatedMemberRepo.findOne({
-          where: { id },
-          relations: { spouse: true, children: true, welfare: true },
-        });
-      }
-      console.log('member 3', member);
-
-      return member;
-    } catch (error) {
-      throw new Error(error);
     }
+
+    if (!member) {
+      member = await this.deceasedMemberRepo.findOne({
+        where: { id },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
+      });
+    }
+
+    if (!member) {
+      member = await this.deactivatedMemberRepo.findOne({
+        where: { id },
+        relations: {
+          spouse: true,
+          children: true,
+          welfare: true,
+          contributions: true,
+        },
+      });
+    }
+
+    return member;
+  }
+
+  async search(page: number = 1, take: number = 100, name: string) {
+    const skip: number = Number(take * (page - 1));
+    let members;
+
+    members = await this.memberRepo
+      .find({
+        skip,
+        take,
+        where: { name: ILike(`%${name}%`) },
+      })
+      .then((members) => {
+        return members.map((member) => {
+          const { id, id_number, name } = member;
+          return { id, name: `${name} (${id_number})` };
+        });
+      });
+
+    return members;
   }
 
   async readMany(
@@ -94,67 +123,39 @@ export class MembersService {
       | DeactivatedMember
     )[];
     const { membership } = searchQueryParams;
-    try {
-      switch (membership) {
-        case Membership.Active:
-          members = await this.memberRepo.find({
-            skip,
-            take,
-          });
-          break;
+    switch (membership) {
+      case Membership.Bereaved:
+        members = await this.bereavedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
 
-        case Membership.Bereaved:
-          members = await this.bereavedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
+      case Membership.Deceased:
+        members = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
 
-        case Membership.Deceased:
-          members = await this.deceasedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
-
-        case Membership.Deactivated:
-          members = await this.deactivatedMemberRepo.find({
-            skip,
-            take,
-          });
-          break;
-        default:
-          const [
-            activeMembers,
-            bereavedMembers,
-            deceasedMembers,
-            deactivatedMembers,
-          ] = await Promise.all([
-            this.memberRepo.find({ skip, take }),
-            this.bereavedMemberRepo.find({ skip, take }),
-            this.deceasedMemberRepo.find({ skip, take }),
-            this.deactivatedMemberRepo.find({ skip, take }),
-          ]);
-
-          members = [
-            ...activeMembers,
-            ...bereavedMembers,
-            ...deceasedMembers,
-            ...deactivatedMembers,
-          ];
-          console.log(
-            'all membership',
-            activeMembers,
-            bereavedMembers,
-            deceasedMembers,
-            deactivatedMembers,
-          );
-
-          break;
-      }
-    } catch (error) {
-      throw new Error(error);
+      case Membership.Deactivated:
+        members = await this.deactivatedMemberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
+      default:
+        members = await this.memberRepo.find({
+          skip,
+          take,
+          relations: { spouse: true, children: true, contributions: true, },
+        });
+        break;
     }
+
     return members;
   }
 
@@ -162,51 +163,116 @@ export class MembersService {
     id: string,
     page: number,
     take: number,
+    searchQueryParams?: SearchQueryDto,
   ): Promise<Member[]> {
     const skip: number = Number(take * (page - 1));
+    let members: (
+      | Member
+      | BereavedMember
+      | DeceasedMember
+      | DeactivatedMember
+    )[];
+    const { membership } = searchQueryParams;
+    switch (membership) {
+      case Membership.Bereaved:
+        members = await this.bereavedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
 
-    let members: Member[];
+      case Membership.Deceased:
+        members = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
 
-    try {
-      members = await this.memberRepo.find({
-        skip,
-        take,
-        where: { welfareId: id },
-        relations: {
-          spouse: true,
-          children: true,
-        },
-      });
-      return members;
-    } catch (error) {
-      throw new Error(error);
+      case Membership.Deactivated:
+        members = await this.deactivatedMemberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
+      default:
+        members = await this.memberRepo.find({
+          skip,
+          take,
+          where: { welfareId: id },
+          relations: { spouse: true, children: true, contributions: true },
+        });
+        break;
     }
+
+    return members;
   }
 
   async update(id, payload: Partial<MemberDto>): Promise<Member> {
     return this.upsert(payload, id);
   }
 
-  async updateToBereaved(id, payload: UpdateToBereavedMemberDto) {
+  async isBereaved(id, payload: IsBereavedMemberDto) {
     return this.bereavedMemberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        try {
-          if (id) {
-            const bereavedMember = Object.assign(
-              new BereavedMember(),
-              payload,
-              {
-                membership: Membership.Bereaved,
-              },
-            );
-            await transactionEntityManager.update(
-              Member,
-              { id },
-              bereavedMember,
-            );
-          }
-        } catch (error) {
-          throw new Error(error);
+        if (id) {
+          const bereavedMember = Object.assign(new BereavedMember(), payload, {
+            membership: Membership.Bereaved,
+          });
+          await transactionEntityManager.update(Member, { id }, bereavedMember);
+        }
+      },
+    );
+  }
+
+  async isDeceased(id, payload: IsDeceasedMemberDto) {
+    return this.deceasedMemberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const deceasedMember = Object.assign(new DeceasedMember(), payload, {
+            membership: Membership.Deceased,
+          });
+          await transactionEntityManager.update(Member, { id }, deceasedMember);
+        }
+      },
+    );
+  }
+
+  async isDeactivated(id, payload: IsDeactivatedMemberDto) {
+    return this.deactivatedMemberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const deactivatedMemberRepo = Object.assign(
+            new DeactivatedMember(),
+            payload,
+            {
+              membership: Membership.Deactivated,
+              deactivation_date: new Date(Date.now()),
+            },
+          );
+          await transactionEntityManager.update(
+            Member,
+            { id },
+            deactivatedMemberRepo,
+          );
+        }
+      },
+    );
+  }
+
+  async activate(id) {
+    return this.memberRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        if (id) {
+          const activeMember = Object.assign(new Member(), {
+            membership: Membership.Active,
+          });
+          await transactionEntityManager.update(Member, { id }, activeMember);
         }
       },
     );
@@ -217,76 +283,65 @@ export class MembersService {
 
     return this.memberRepo.manager.transaction(
       async (transactionEntityManager: EntityManager) => {
-        try {
-          if (id) {
-            member = await transactionEntityManager.findOneBy<
-              Member | BereavedMember | DeceasedMember | DeactivatedMember
-            >(Member, {
-              id,
-            });
-          } else {
-            member = await transactionEntityManager.create(Member);
-          }
-
-          const { welfareDto, spouseDto, childrenDto } = payload as MemberDto;
-
-          if (welfareDto) {
-            if (member?.welfare) {
-              welfare = member?.welfare;
-            } else {
-              welfare = new Welfare();
-              welfare.members = [];
-              welfare = await transactionEntityManager.create(Welfare, welfare);
-            }
-
-            Object.assign(welfare, welfareDto);
-
-            member.welfare = await transactionEntityManager.save(welfare);
-          }
-
-          if (spouseDto) {
-            if (member?.spouse) {
-              spouse = member?.spouse;
-            } else {
-              spouse = new Spouse();
-              spouse = await transactionEntityManager.create(Spouse, spouse);
-            }
-
-            Object.assign(spouse, spouseDto);
-
-            member.spouse = await transactionEntityManager.save(spouse);
-          }
-
-          if (childrenDto) {
-            if (member?.children?.length) {
-              children = member?.children;
-            } else {
-              children = new Array<Child>(childrenDto.length).fill(new Child());
-              children = await transactionEntityManager.create(Child, children);
-            }
-            for (let index = 0; index < childrenDto.length; index++) {
-              Object.assign(children[index], childrenDto[index]);
-            }
-
-            member.children = await transactionEntityManager.save(children);
-          }
-
-          /**
-           *
-           * Assigns payload data to UserAccount Object
-           *
-           */
-          Object.assign(member, payload);
-
-          member.salt = await genSalt();
-          member.password = await hash('Password@123', member.salt);
-
-          member = await transactionEntityManager.save(member);
-
-          delete member.password && delete member.salt;
-        } catch (error) {
-          throw new Error(error);
+        if (id) {
+          member = await transactionEntityManager.findOneBy<
+            Member | BereavedMember | DeceasedMember | DeactivatedMember
+          >(Member, {
+            id,
+          });
+        } else {
+          member = await transactionEntityManager.create(Member);
         }
+
+        const { welfareId, spouseDto, childrenDto } = payload as MemberDto;
+
+        if (welfareId) {
+          member.welfare = await transactionEntityManager.findOneBy(Welfare, {
+            id: welfareId,
+          });
+        }
+
+        if (spouseDto) {
+          if (member?.spouse) {
+            spouse = member?.spouse;
+          } else {
+            spouse = new Spouse();
+            spouse = await transactionEntityManager.create(Spouse, spouse);
+          }
+
+          Object.assign(spouse, spouseDto);
+
+          member.spouse = await transactionEntityManager.save(spouse);
+        }
+
+        if (childrenDto) {
+          if (member?.children?.length) {
+            children = member?.children;
+          } else {
+            children = new Array<Child>(childrenDto.length).fill(new Child());
+            children = await transactionEntityManager.create(Child, children);
+          }
+          for (let index = 0; index < childrenDto.length; index++) {
+            Object.assign(children[index], childrenDto[index]);
+          }
+
+          member.children = await transactionEntityManager.save(children);
+        }
+
+        /**
+         *
+         * Assigns payload data to UserAccount Object
+         *
+         */
+        Object.assign(member, payload);
+
+        member.salt = await genSalt();
+        member.password = await hash('Password@123', member.salt);
+
+        member = await transactionEntityManager.save(member);
+
+        delete member.password && delete member.salt;
+
         return member;
       },
     );

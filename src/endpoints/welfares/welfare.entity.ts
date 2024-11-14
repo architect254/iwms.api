@@ -10,13 +10,14 @@ import {
 } from 'typeorm';
 import { DeactivatedMember, DeceasedMember, Member } from '../members/entities';
 import { BereavedMember } from '../members/entities';
+import { Account } from '../finance/entities';
 
 @Entity('welfares')
 export class Welfare {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ unique: true })
   name: string;
 
   @Column({ unique: true })
@@ -31,23 +32,47 @@ export class Welfare {
   @Column({ nullable: true })
   logo_url?: string;
 
-  @OneToOne(() => Member, (chairperson) => chairperson.welfare)
+  @OneToOne(() => Member, (chairperson) => chairperson.welfare, {
+    cascade: true,
+  })
   @JoinColumn()
   chairperson: Member;
 
-  @OneToOne(() => Member, (treasurer) => treasurer.welfare)
+  @OneToOne(() => Member, (treasurer) => treasurer.welfare, { cascade: true })
   @JoinColumn()
   treasurer: Member;
 
-  @OneToOne(() => Member, (secretary) => secretary.welfare)
+  @OneToOne(() => Member, (secretary) => secretary.welfare, { cascade: true })
   @JoinColumn()
   secretary: Member;
 
   @OneToMany(
     () => Member || BereavedMember || DeceasedMember || DeactivatedMember,
     (members) => members.welfare,
+    { cascade: true },
   )
   members: (Member | BereavedMember | DeceasedMember | DeactivatedMember)[];
+
+  @OneToMany(() => Account, (accounts) => accounts.welfare)
+  accounts: Account[];
+
+  @Column({ default: 0 })
+  membershipContributionAmount: number;
+
+  @Column({ default: 0 })
+  monthlyContributionAmount: number;
+
+  @Column({ default: 0 })
+  bereavedMemberContributionAmount: number;
+
+  @Column({ default: 0 })
+  deceasedMemberContributionAmount: number;
+
+  @Column({  default: 0 })
+  totalContributionsAmount: number;
+
+  @Column({  default: 0 })
+  totalExpendituresAmount: number;
 
   @CreateDateColumn()
   create_date?: Date;

@@ -8,20 +8,17 @@ import {
   ChildEntity,
   PrimaryGeneratedColumn,
   OneToOne,
+  JoinColumn,
 } from 'typeorm';
-import { Transaction } from '../transactions/transaction.entity';
-import {
-  Member,
-  BereavedMember,
-  DeceasedMember,
-} from '../members/entities';
+import { BereavedMember, DeceasedMember, Member } from '../members/entities';
+import { Account } from '../finance/entities';
 
 export enum ContributionType {
   Membership = 'Membership',
   Monthly = 'Monthly',
   BereavedMember = 'Bereaved Member',
   DeceasedMember = 'Deceased Member',
-  MembershipReActivation = 'Membership Re-Activation',
+  MembershipReactivation = 'Membership Reactivation',
 }
 
 @Entity('contributions')
@@ -38,16 +35,16 @@ export abstract class Contribution {
   })
   type: ContributionType;
 
-  @OneToOne(() => Transaction, (transaction) => transaction.id)
-  transaction: Transaction;
+  @Column({ default: 0 })
+  amount: number;
 
-  @ManyToOne(() => Member || BereavedMember, (from) => from.from)
-  from: Member | BereavedMember;
+  @ManyToOne(() => Member, (member) => member.contributions)
+  @JoinColumn()
+  member: Member;
 
-  @ManyToOne(() => BereavedMember || DeceasedMember, (to) => to.to, {
-    nullable: true,
-  })
-  to?: BereavedMember | DeceasedMember;
+  @ManyToOne(() => Account, (account) => account.contributions)
+  @JoinColumn()
+  account: Account;
 
   @CreateDateColumn()
   create_date?: Date;
@@ -65,6 +62,8 @@ export class MembershipContribution extends Contribution {
 
 @ChildEntity(ContributionType.Monthly)
 export class MonthlyContribution extends Contribution {
+  @Column()
+  for_month: Date;
   constructor() {
     super();
   }
@@ -72,6 +71,13 @@ export class MonthlyContribution extends Contribution {
 
 @ChildEntity(ContributionType.BereavedMember)
 export class BereavedMemberContribution extends Contribution {
+  @ManyToOne(
+    () => BereavedMember,
+    (bereavedMember) => bereavedMember.contributions,
+  )
+  @JoinColumn()
+  bereavedMember: BereavedMember;
+
   constructor() {
     super();
   }
@@ -79,12 +85,18 @@ export class BereavedMemberContribution extends Contribution {
 
 @ChildEntity(ContributionType.DeceasedMember)
 export class DeceasedMemberContribution extends Contribution {
+  @ManyToOne(
+    () => DeceasedMember,
+    (deceasedMember) => deceasedMember.contributions,
+  )
+  @JoinColumn()
+  deceasedMember: DeceasedMember;
   constructor() {
     super();
   }
 }
 
-@ChildEntity(ContributionType.MembershipReActivation)
+@ChildEntity(ContributionType.MembershipReactivation)
 export class MembershipReactivationContribution extends Contribution {
   constructor() {
     super();

@@ -3,18 +3,30 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { ContributionController } from './contribution.controller';
 import { ContributionService } from './contribution.service';
-import { Contribution } from './contribution.entity';
+import {
+  BereavedMemberContribution,
+  Contribution,
+  DeceasedMemberContribution,
+  MembershipContribution,
+  MembershipReactivationContribution,
+  MonthlyContribution,
+} from './contribution.entity';
 import { MembersModule } from '../members/members.module';
-import { TransactionModule } from '../transactions/transaction.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Contribution]),
+    TypeOrmModule.forFeature([
+      Contribution,
+      MembershipContribution,
+      MonthlyContribution,
+      BereavedMemberContribution,
+      DeceasedMemberContribution,
+      MembershipReactivationContribution,
+    ]),
     MembersModule,
-    TransactionModule,
   ],
   controllers: [ContributionController],
   providers: [ContributionService],
-  exports: [ContributionService, TypeOrmModule],
+  exports: [ContributionService, TypeOrmModule, MembersModule],
 })
 export class ContributionModule {}

@@ -8,9 +8,9 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 
 import { AdminsModule } from '../admins/admins.module';
-import { MembersModule } from '../members/members.module';
 
 import * as config from 'config';
+import { WelfareModule } from '../welfares/welfare.module';
 
 const JWT_CONFIG = config.get('jwt');
 
@@ -24,13 +24,13 @@ const JWT_CONFIG = config.get('jwt');
       },
     }),
     AdminsModule,
-    MembersModule,
+    WelfareModule,
   ],
   providers: [JwtStrategy, AuthService],
   controllers: [AuthController],
   exports: [
     AdminsModule,
-    MembersModule,
+    WelfareModule,
     JwtModule,
     PassportModule,
     AuthService,

@@ -40,11 +40,8 @@ export class Member extends User {
   @Column({ nullable: true })
   welfareId: string;
 
-  @OneToMany(() => Contribution, (from) => from.from)
-  from: Contribution[];
-
-  @OneToMany(() => Contribution, (to) => to.to)
-  to: Contribution[];
+  @OneToMany(() => Contribution, (contributions) => contributions.member)
+  contributions: Contribution[];
 
   @OneToOne(() => Spouse, (spouse) => spouse.spouse, { eager: true })
   @JoinColumn()

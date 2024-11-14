@@ -1,17 +1,11 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import {
   BereavedMemberContributionDto,
-  ContributionDto,
   DeceasedMemberContributionDto,
   MembershipContributionDto,
-  MembershipReactivationContributionDto,
   MonthlyContributionDto,
   SearchQueryDto,
 } from './contribution.dto';
@@ -25,153 +19,413 @@ import {
   MonthlyContribution,
 } from './contribution.entity';
 import {
-  Transaction,
-  TransactionStatus,
-} from '../transactions/transaction.entity';
-import {
   Member,
   BereavedMember,
   DeceasedMember,
+  DeactivatedMember,
+  Membership,
 } from '../members/entities';
+import { Account } from '../finance/entities';
+import { Welfare } from '../welfares/welfare.entity';
 
 @Injectable()
 export class ContributionService {
   constructor(
     @InjectRepository(Contribution)
     private contributionRepo: Repository<Contribution>,
+    @InjectRepository(MembershipContribution)
+    private membershipContributionRepo: Repository<MembershipContribution>,
+    @InjectRepository(MonthlyContribution)
+    private monthlyContributionRepo: Repository<MonthlyContribution>,
+    @InjectRepository(BereavedMemberContribution)
+    private bereavedMemberContributionRep: Repository<BereavedMemberContribution>,
+    @InjectRepository(DeceasedMemberContribution)
+    private deceasedMemberRepo: Repository<DeceasedMemberContribution>,
+    @InjectRepository(MembershipReactivationContribution)
+    private membershipReactivationContributionRepo: Repository<MembershipReactivationContribution>,
     @InjectRepository(Member)
     private memberRepo: Repository<Member>,
-    @InjectRepository(BereavedMember || DeceasedMember)
-    private bereavedMemberRepo: Repository<BereavedMember | DeceasedMember>,
-    @InjectRepository(Transaction)
-    private transactionRepo: Repository<Transaction>,
   ) {}
 
-  async create(payload: ContributionDto): Promise<Contribution> {
-    let contribution: Contribution;
+  async create(
+    payload:
+      | MembershipContributionDto
+      | MonthlyContributionDto
+      | BereavedMemberContributionDto
+      | DeceasedMemberContributionDto,
+  ): Promise<
+    | MembershipContribution
+    | MonthlyContribution
+    | BereavedMemberContribution
+    | DeceasedMemberContribution
+  > {
+    let contribution:
+      | MembershipContribution
+      | MonthlyContribution
+      | BereavedMemberContribution
+      | DeceasedMemberContribution;
 
-    switch (payload.type) {
-      case ContributionType.Membership:
-        contribution = new MembershipContribution();
-        payload = payload as MembershipContributionDto;
-        break;
+    return this.contributionRepo.manager.transaction(
+      async (transactionEntityManager: EntityManager) => {
+        let { memberId, amount, type, accountName } = payload;
+        switch (type as ContributionType) {
+          case ContributionType.Membership:
+            contribution = await transactionEntityManager.create(
+              MembershipContribution,
+            );
+            break;
+          case ContributionType.Monthly:
+            contribution =
+              await transactionEntityManager.create(MonthlyContribution);
 
-      case ContributionType.Monthly:
-        contribution = new MonthlyContribution();
-        payload = payload as MonthlyContributionDto;
-        break;
+            const { for_month } = payload as MonthlyContributionDto;
+            (contribution as MonthlyContribution).for_month = for_month;
+            break;
+          case ContributionType.BereavedMember:
+            contribution = await transactionEntityManager.create(
+              BereavedMemberContribution,
+            );
+            let { bereavedMemberId } = payload as BereavedMemberContributionDto;
 
-      case ContributionType.BereavedMember:
-        contribution = new BereavedMemberContribution();
-        payload = payload as BereavedMemberContributionDto;
-        break;
+            if (bereavedMemberId) {
+              if (bereavedMemberId.includes('(')) {
+                bereavedMemberId = bereavedMemberId.split('(')[1];
+              }
+              bereavedMemberId = bereavedMemberId.trim();
+              if (bereavedMemberId.includes(')')) {
+                bereavedMemberId = bereavedMemberId.split(')')[0];
+              }
+              const id_number = bereavedMemberId.trim();
+              const member = await transactionEntityManager.findOne(
+                BereavedMember,
+                {
+                  where: { id_number },
+                },
+              );
 
-      case ContributionType.DeceasedMember:
-        contribution = new DeceasedMemberContribution();
-        payload = payload as DeceasedMemberContributionDto;
-        break;
+              (contribution as BereavedMemberContribution).bereavedMember =
+                member;
+            }
+            break;
+          case ContributionType.DeceasedMember:
+            contribution = await transactionEntityManager.create(
+              DeceasedMemberContribution,
+            );
+            let { deceasedMemberId } = payload as DeceasedMemberContributionDto;
+            if (deceasedMemberId) {
+              if (deceasedMemberId.includes('(')) {
+                deceasedMemberId = deceasedMemberId.split('(')[1];
+              }
+              deceasedMemberId = deceasedMemberId.trim();
+              if (deceasedMemberId.includes(')')) {
+                deceasedMemberId = deceasedMemberId.split(')')[0];
+              }
+              const id_number = deceasedMemberId.trim();
+              const member = await transactionEntityManager.findOne(
+                DeceasedMember,
+                {
+                  where: { id_number },
+                },
+              );
+              (contribution as DeceasedMemberContribution).deceasedMember =
+                member;
+            }
+            break;
+          case ContributionType.MembershipReactivation:
+            contribution = await transactionEntityManager.create(
+              MembershipReactivationContribution,
+            );
 
-      case ContributionType.MembershipReActivation:
-        contribution = new MembershipReactivationContribution();
-        payload = payload as MembershipReactivationContributionDto;
-        break;
-    }
+            if (memberId.includes('(')) {
+              memberId = memberId.split('(')[1];
+            }
+            memberId = memberId.trim();
+            if (memberId.includes(')')) {
+              memberId = memberId.split(')')[0];
+            }
+            const id_number = memberId.trim();
+            const member = await transactionEntityManager.findOne(
+              DeactivatedMember,
+              {
+                where: { id_number },
+              },
+            );
 
-    contribution = await this.contributionRepo.create(contribution);
+            contribution.member = member;
 
-    return this.upsert(contribution, payload);
+            this.memberRepo.manager.transaction(
+              async (transactionEntityManager: EntityManager) => {
+                if (member.id) {
+                  const activeMember = Object.assign(new Member(), {
+                    membership: Membership.Active,
+                  });
+                  await transactionEntityManager.update(
+                    Member,
+                    { id: member.id },
+                    activeMember,
+                  );
+                }
+              },
+            );
+            break;
+        }
+
+        if (memberId && type != ContributionType.MembershipReactivation) {
+          if (memberId.includes('(')) {
+            memberId = memberId.split('(')[1];
+          }
+          memberId = memberId.trim();
+          if (memberId.includes(')')) {
+            memberId = memberId.split(')')[0];
+          }
+          const id_number = memberId.trim();
+          let member;
+          member = await transactionEntityManager.findOne(Member, {
+            where: { id_number },
+          });
+          contribution.member = member;
+        }
+
+        contribution.type = type as ContributionType;
+        contribution.amount = amount;
+
+        contribution.account = await transactionEntityManager.findOne(Account, {
+          where: { name: accountName },
+        });
+
+        contribution.account.current_amount =
+          Number(contribution.account.current_amount) + Number(amount);
+
+        await transactionEntityManager.save(contribution.account);
+
+        const welfare = await transactionEntityManager.findOne(Welfare, {
+          where: { id: contribution.account.welfare.id },
+        });
+
+        welfare.totalContributionsAmount =
+          Number(welfare.totalContributionsAmount) + Number(amount);
+
+        await transactionEntityManager.save(welfare);
+
+        contribution = await transactionEntityManager.save(contribution);
+        return contribution;
+      },
+    );
   }
 
-  async read(id): Promise<Contribution> {
-    let contribution;
-
-    try {
-      contribution = await this.contributionRepo.findOne({
+  async read(
+    id: string,
+  ): Promise<
+    | MembershipContribution
+    | MonthlyContribution
+    | BereavedMemberContribution
+    | DeceasedMemberContribution
+    | MembershipReactivationContribution
+  > {
+    return await this.contributionRepo
+      .findOne({
         where: { id },
+        relations: { member: true, account: true },
+      })
+      .then(async (contribution) => {
+        switch (contribution.type) {
+          case ContributionType.Membership:
+            contribution = await this.membershipContributionRepo.findOne({
+              where: { id },
+              relations: { member: true, account: true },
+            });
+            return contribution;
+          case ContributionType.Monthly:
+            contribution = await this.monthlyContributionRepo.findOne({
+              where: { id },
+              relations: { member: true, account: true },
+            });
+            return contribution;
+          case ContributionType.BereavedMember:
+            contribution = await this.bereavedMemberContributionRep.findOne({
+              where: { id },
+              relations: { member: true, bereavedMember: true, account: true },
+            });
+            return contribution;
+          case ContributionType.DeceasedMember:
+            contribution = await this.deceasedMemberRepo.findOne({
+              where: { id },
+              relations: { member: true, deceasedMember: true, account: true },
+            });
+            return contribution;
+          case ContributionType.MembershipReactivation:
+            contribution =
+              await this.membershipReactivationContributionRepo.findOne({
+                where: { id },
+                relations: { member: true, account: true },
+              });
+            return contribution;
+        }
       });
-    } catch (error) {
-      contribution = null;
-    }
-
-    if (!contribution || !Object.keys(contribution).length) {
-      const errorMessage = `Contribution not found`;
-      throw new NotFoundException(errorMessage);
-    }
-
-    return contribution;
   }
 
   async readMany(
-    page: number,
-    take: number,
-    searchQueryParams: SearchQueryDto,
-  ): Promise<Contribution[]> {
+    page: number = 1,
+    take: number = 100,
+    searchQueryParams?: SearchQueryDto,
+  ): Promise<
+    (
+      | Contribution
+      | MembershipContribution
+      | MonthlyContribution
+      | BereavedMemberContribution
+      | DeceasedMemberContribution
+      | MembershipReactivationContribution
+    )[]
+  > {
     const skip: number = Number(take * (page - 1));
+    let contributions: (
+      | Contribution
+      | MembershipContribution
+      | MonthlyContribution
+      | BereavedMemberContribution
+      | DeceasedMemberContribution
+      | MembershipReactivationContribution
+    )[];
+    let { type } = searchQueryParams;
+    console.log('param type', type);
 
-    let contributions = [];
+    switch (type) {
+      case ContributionType.Membership:
+        contributions = await this.membershipContributionRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { member: true, account: true },
+        });
+        console.log('memberhip contriution 0', type);
+        break;
 
-    try {
-      contributions = await this.contributionRepo.find({
-        skip,
-        take,
-        where: searchQueryParams,
-      });
-    } catch (error) {
-      contributions = [];
+      case ContributionType.Monthly:
+        contributions = await this.monthlyContributionRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { member: true, account: true },
+        });
+        break;
+
+      case ContributionType.BereavedMember:
+        contributions = await this.bereavedMemberContributionRep.find({
+          skip,
+          take,
+          where: { type },
+          relations: { member: true, account: true, bereavedMember: true },
+        });
+        break;
+      case ContributionType.DeceasedMember:
+        contributions = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { member: true, account: true, deceasedMember: true },
+        });
+        break;
+      case ContributionType.MembershipReactivation:
+        contributions = await this.membershipReactivationContributionRepo.find({
+          skip,
+          take,
+          where: { type },
+          relations: { member: true, account: true },
+        });
+        break;
+      default:
+        contributions = await this.contributionRepo.find({
+          skip,
+          take,
+          relations: { member: true, account: true },
+        });
+        console.log('all contriution 1', type);
+
+        break;
     }
 
     return contributions;
   }
 
-  async update(id, payload: ContributionDto): Promise<Contribution> {
-    const contribution = await this.read(id);
-    return this.upsert(contribution, payload);
-  }
+  async readManyByMemberId(
+    id: string,
+    page: number,
+    take: number,
+    searchQueryParams?: SearchQueryDto,
+  ): Promise<Contribution[]> {
+    const skip: number = Number(take * (page - 1));
+    let contributions: (
+      | MembershipContribution
+      | MonthlyContribution
+      | BereavedMemberContribution
+      | DeceasedMemberContribution
+      | MembershipContribution
+    )[];
+    const { type } = searchQueryParams;
+    switch (type) {
+      case ContributionType.Membership:
+        contributions = await this.membershipContributionRepo.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true },
+        });
+        break;
 
-  async upsert(
-    contribution: Contribution,
-    payload: ContributionDto,
-  ): Promise<Contribution> {
-    const { transactionDto, ...contributionFields } = payload;
+      case ContributionType.Monthly:
+        contributions = await this.monthlyContributionRepo.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true },
+        });
+        break;
 
-    Object.assign(contribution, contributionFields);
-
-    if (contributionFields.from) {
-      contribution.from = await this.memberRepo.findOneBy({
-        id: contributionFields.from,
-      });
+      case ContributionType.BereavedMember:
+        contributions = await this.bereavedMemberContributionRep.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true, bereavedMember: true },
+        });
+        break;
+      case ContributionType.DeceasedMember:
+        contributions = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true, deceasedMember: true },
+        });
+        break;
+      case ContributionType.MembershipReactivation:
+        contributions = await this.membershipReactivationContributionRepo.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true },
+        });
+        break;
+      default:
+        contributions = await this.contributionRepo.find({
+          skip,
+          take,
+          where: { member: { id } },
+          relations: { member: true, account: true },
+        });
+        break;
     }
-    if (contributionFields.to) {
-      contribution.to = await this.bereavedMemberRepo.findOneBy({
-        id: contributionFields.to,
-      });
-    }
 
-    let transaction;
-    if (transactionDto.id) {
-      transaction = this.transactionRepo.findOneBy({ id: transactionDto.id });
-    } else {
-      transaction = this.transactionRepo.create(new Transaction());
-    }
-
-    Object.assign(transaction, transactionDto);
-
-    transaction.from_account = contribution.from.id_number;
-    transaction.to_account = contribution.to.id_number;
-    transaction.status = TransactionStatus.Committed;
-
-    contribution.transaction = await this.transactionRepo.save(transaction);
-
-    return await this.contributionRepo.save(contribution);
+    return contributions;
   }
 
   async drop(id): Promise<void> {
-    const contribution: Contribution = await this.read(id);
-    const result = await this.contributionRepo.softRemove(contribution);
-
-    if (!result) {
-      const errorMessage = `Operation Failed:DELETE`;
-      throw new InternalServerErrorException(errorMessage);
-    }
+    //   const account: AdminUserAccount | ClientUserAccount = await this.read(id);
+    //   const result = await this.userAccountRepo.remove(account);
+    //   if (!result) {
+    //     const errorMessage = `Operation Failed:DELETE`;
+    //     throw new InternalServerErrorException(errorMessage);
+    //   }
+    // }
   }
 }

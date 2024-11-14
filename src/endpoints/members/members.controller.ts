@@ -20,10 +20,11 @@ import {
   PaginationTransformPipe,
 } from 'src/core/models/dtos/pagination-request.dto';
 import {
-  BereavedMemberDto,
+  IsBereavedMemberDto,
+  IsDeactivatedMemberDto,
+  IsDeceasedMemberDto,
   MemberDto,
   SearchQueryDto,
-  UpdateToBereavedMemberDto,
 } from './dtos';
 import { MembersService } from './members.service';
 import { User } from 'src/core/models/entities/user.entity';
@@ -38,19 +39,43 @@ export class MembersController {
     return await this.membersService.create(payload);
   }
 
-  @Get('welfare/:id')
+  @Get('search')
+  async search(
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query('name')
+    name: string,
+  ) {
+    const { page, take } = paginationRequest;
+    if (name.includes('(')) {
+      name = name.split('(')[0];
+    }
+    name = name.trim();
+    return await this.membersService.search(page, take, name);
+  }
+
+  @Get('by-welfare/:id')
   async getManyByWelfare(
     @Param('id') id,
-    @Query('page', ParseIntPipe) page: number,
-    @Query('take', ParseIntPipe) take: number,
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
   ) {
-    return await this.membersService.readManyByWelfareId(id, page, take);
+    const { page, take } = paginationRequest;
+    return await this.membersService.readManyByWelfareId(
+      id,
+      page,
+      take,
+      queryParams,
+    );
   }
 
   @Get(':id')
   async get(@Param('id') id: string) {
     return await this.membersService.read(id);
   }
+
   @Get()
   async getMany(
     @Query(new PaginationTransformPipe())
@@ -62,17 +87,39 @@ export class MembersController {
     return await this.membersService.readMany(page, take, queryParams);
   }
 
-  @Put(':id/is-bereaved')
+  @Put(':id/is-deceased')
   @Header('content-type', 'application/json')
-  async updateToBereaved(
+  async isDeceased(
     @Param('id') id: string,
-    // @Req() req: Request,
-    @Body() payload: UpdateToBereavedMemberDto,
+    @Body() payload: IsDeceasedMemberDto,
     @GetUser() initiator: User,
   ) {
-    console.log('update to bereaved 0', id);
-    console.log('update to bereaved 1', payload);
-    return await this.membersService.updateToBereaved(id, payload);
+    return await this.membersService.isDeceased(id, payload);
+  }
+
+  @Put(':id/is-bereaved')
+  @Header('content-type', 'application/json')
+  async isBereaved(
+    @Param('id') id: string,
+    @Body() payload: IsBereavedMemberDto,
+    @GetUser() initiator: User,
+  ) {
+    return await this.membersService.isBereaved(id, payload);
+  }
+
+  @Put(':id/is-deactivated')
+  @Header('content-type', 'application/json')
+  async IsDeactivated(
+    @Param('id') id: string,
+    @Body() payload: IsDeactivatedMemberDto,
+    @GetUser() initiator: User,
+  ) {
+    return await this.membersService.isDeactivated(id, payload);
+  }
+
+  @Put(':id/activate')
+  async IsActivated(@Param('id') id: string, @GetUser() initiator: User) {
+    return await this.membersService.activate(id);
   }
 
   @Put(':id')

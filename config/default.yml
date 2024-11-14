@@ -3,7 +3,6 @@ server:
 db:
   type: 'postgres'
   port: 5432
-  database: 'iwms_db_ijww'
   synchronize: true
 jwt:
   expiresIn: 3600
