@@ -7,10 +7,12 @@ import {
   UpdateDateColumn,
   OneToOne,
   JoinColumn,
+  ManyToOne,
 } from 'typeorm';
 import { DeactivatedMember, DeceasedMember, Member } from '../members/entities';
 import { BereavedMember } from '../members/entities';
 import { Account } from '../finance/entities';
+import { Config } from '../config/entities';
 
 @Entity('welfares')
 export class Welfare {
@@ -26,8 +28,8 @@ export class Welfare {
   @Column({ unique: true })
   phone_number: string;
 
-  @Column({ default: 'iwms-5vlj.onrender.com', nullable: true })
-  hostname: string;
+  @ManyToOne(() => Config, (config) => config.welfare)
+  config: Config;
 
   @Column({ nullable: true })
   logo_url?: string;

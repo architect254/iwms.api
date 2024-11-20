@@ -12,6 +12,7 @@ import { ChildDto, SpouseDto } from '../members/dtos';
 import { Type } from 'class-transformer';
 import { UserDto } from 'src/core/models/dtos/user.dto';
 import { Membership, Member } from '../members/entities';
+import { ConfigDto } from '../config/config.dto';
 
 export class MemberDto extends UserDto {
   @ValidateIf((member: Member) => member.membership == Membership.Active)
@@ -49,8 +50,10 @@ export class WelfareDto {
   email: string;
 
   @ValidateIf((welfare) => !welfare.id)
-  @IsString()
-  hostname: string;
+  @IsNotEmptyObject()
+  @ValidateNested()
+  @Type(() => ConfigDto)
+  configDto: ConfigDto;
 
   @IsOptional()
   @IsString()

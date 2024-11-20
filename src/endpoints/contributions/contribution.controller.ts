@@ -58,6 +58,23 @@ export class ContributionController {
     return await this.contributionService.readMany(page, take, queryParams);
   }
 
+  @Get('by-welfare/:id')
+  async getManyByWelfare(
+    @Param('id') id,
+    @Query(new PaginationTransformPipe())
+    paginationRequest: PaginationRequestDto,
+    @Query(new ValidationPipe())
+    queryParams: SearchQueryDto,
+  ) {
+    const { page, take } = paginationRequest;
+    return await this.contributionService.readManyByWelfareId(
+      id,
+      page,
+      take,
+      queryParams,
+    );
+  }
+
   @Get('by-member/:id')
   async getManyByMember(
     @Param('id') id,

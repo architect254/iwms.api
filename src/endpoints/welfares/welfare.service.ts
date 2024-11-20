@@ -12,6 +12,7 @@ import { hash, genSalt } from 'bcrypt';
 import { Welfare } from './welfare.entity';
 import { WelfareDto } from './welfare.dto';
 import { Child, Member, Membership, Spouse } from '../members/entities';
+import { Config, ConfigType, Page } from '../config/entities';
 
 @Injectable()
 export class WelfareService {
@@ -34,6 +35,7 @@ export class WelfareService {
         treasurer: true,
         secretary: true,
         members: true,
+        config: true,
       },
     });
 
@@ -57,6 +59,7 @@ export class WelfareService {
         chairperson: true,
         treasurer: true,
         secretary: true,
+        config: true,
         members: true,
       },
     });
@@ -89,6 +92,8 @@ export class WelfareService {
 
   async upsert(payload: Partial<WelfareDto>, id?: string): Promise<Welfare> {
     let welfare: Welfare,
+      config: Config,
+      page: Page,
       chairperson: Member,
       chairpersonSpouse: Spouse,
       chairpersonChildren: Child[],
@@ -114,7 +119,46 @@ export class WelfareService {
           welfare = await transactionEntityManager.create(Welfare);
         }
 
-        const { chairpersonDto, treasurerDto, secretaryDto } = payload;
+        const { configDto, chairpersonDto, treasurerDto, secretaryDto } =
+          payload;
+
+        if (configDto) {
+          if (welfare?.config) {
+            config = welfare?.config;
+          } else {
+            const mainConfig = await transactionEntityManager.findOne<Config>(
+              Config,
+              {
+                where: { type: ConfigType.Main },
+              },
+            );
+            if (mainConfig && configDto.host == mainConfig.host) {
+              config = mainConfig;
+            } else {
+              config = new Config();
+              config = await transactionEntityManager.create(Config, config);
+
+              config.type = ConfigType.NonMain;
+              config.host = configDto.host;
+              const { pageDto } = configDto;
+
+              if (pageDto) {
+                if (config?.page) {
+                  page = config?.page;
+                } else {
+                  page = new Page();
+                  page = await transactionEntityManager.create(Page, page);
+                }
+
+                Object.assign(page, pageDto);
+
+                config.page = await transactionEntityManager.save(page);
+              }
+            }
+          }
+
+          welfare.config = await transactionEntityManager.save(config);
+        }
 
         if (chairpersonDto) {
           if (welfare?.chairperson) {

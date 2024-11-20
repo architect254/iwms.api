@@ -7,10 +7,12 @@ import { Welfare } from './welfare.entity';
 import { MembersModule } from '../members/members.module';
 import { ContributionModule } from '../contributions/contribution.module';
 import { FinanceModule } from '../finance/finance.module';
+import { ConfigModule } from '../config/config.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Welfare]),
+    ConfigModule,
     MembersModule,
     ContributionModule,
     FinanceModule,

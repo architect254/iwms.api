@@ -348,6 +348,77 @@ export class ContributionService {
     return contributions;
   }
 
+  async readManyByWelfareId(
+    id: string,
+    page: number,
+    take: number,
+    searchQueryParams?: SearchQueryDto,
+  ): Promise<Contribution[]> {
+    const skip: number = Number(take * (page - 1));
+    let contributions: (
+      | MembershipContribution
+      | MonthlyContribution
+      | BereavedMemberContribution
+      | DeceasedMemberContribution
+      | MembershipContribution
+    )[];
+    const { type } = searchQueryParams;
+    switch (type) {
+      case ContributionType.Membership:
+        contributions = await this.membershipContributionRepo.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true },
+        });
+        break;
+
+      case ContributionType.Monthly:
+        contributions = await this.monthlyContributionRepo.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true },
+        });
+        break;
+
+      case ContributionType.BereavedMember:
+        contributions = await this.bereavedMemberContributionRep.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true, bereavedMember: true },
+        });
+        break;
+      case ContributionType.DeceasedMember:
+        contributions = await this.deceasedMemberRepo.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true, deceasedMember: true },
+        });
+        break;
+      case ContributionType.MembershipReactivation:
+        contributions = await this.membershipReactivationContributionRepo.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true },
+        });
+        break;
+      default:
+        contributions = await this.contributionRepo.find({
+          skip,
+          take,
+          where: { account: { welfare: { id } } },
+          relations: { member: true, account: true },
+        });
+        break;
+    }
+
+    return contributions;
+  }
+
   async readManyByMemberId(
     id: string,
     page: number,
