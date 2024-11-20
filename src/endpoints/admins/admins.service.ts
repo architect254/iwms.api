@@ -6,6 +6,7 @@ import { Repository, EntityManager } from 'typeorm';
 
 import { Admin } from './entities/admin.entity';
 import { AdminDto, SearchQueryDto } from './dtos/admin.dto';
+import { Config, ConfigType, Page } from '../config/entities';
 
 @Injectable()
 export class AdminsService {
@@ -64,6 +65,24 @@ export class AdminsService {
             if (id) {
               return await transactionEntityManager.findOneBy(Admin, { id });
             } else {
+              const mainConfig = await transactionEntityManager.findOne<Config>(
+                Config,
+                {
+                  where: { type: ConfigType.Main },
+                },
+              );
+              if (!mainConfig) {
+                const config = await transactionEntityManager.create(
+                  Config,
+                  new Config(),
+                );
+                config.type = ConfigType.Main;
+                config.page = new Page();
+                config.page.page_name = 'IWMS';
+                config.page.home_content = `This is IWMS Main Home Content`;
+
+                await transactionEntityManager.save(config);
+              }
               return await transactionEntityManager.create(Admin);
             }
           }
