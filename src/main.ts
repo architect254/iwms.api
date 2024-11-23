@@ -74,7 +74,7 @@ async function bootstrap() {
       if (origin?.includes('iwms.com')) {
         cb(null, 'iwms.com');
       } else {
-        cb(null, 'https://iwms-5vlj.onrender.com/');
+        cb(null, origin);
       }
     },
     credentials: true,
