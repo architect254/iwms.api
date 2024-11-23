@@ -144,7 +144,9 @@ export class WelfareService {
 
               if (pageDto) {
                 if (config?.page) {
-                  page = config?.page;
+                  page = await transactionEntityManager.findOne(Page, {
+                    where: { id: config.page.id },
+                  });
                 } else {
                   page = new Page();
                   page = await transactionEntityManager.create(Page, page);
